@@ -26,7 +26,7 @@ Bingit is a static single-page app. It has no backend and stores no user data on
 | [TMDB API](https://developer.themoviedb.org) | Cast, crew, people, artwork, videos, watch providers for movies and TV |
 | [AniList API](https://docs.anilist.co) | Characters, staff, relations and airing schedule for anime |
 
-Your Simkl tokens and a cache of your library are kept in your browser (localStorage and IndexedDB). Signing out removes them and revokes the token.
+Your Simkl refresh token and a cache of your library are kept in your browser's IndexedDB; the short-lived access token stays in memory only. Signing out removes them and revokes the token.
 
 ## Tech stack
 
@@ -46,7 +46,7 @@ Details and reasons: [docs/PLAN.md](docs/PLAN.md). Simkl API notes: [docs/simkl-
 1. Create a Simkl app at <https://simkl.com/settings/developer/>.
    - Auth version: **AUTH V2**
    - Client type: **Mobile, desktop & browser apps** (no client secret)
-   - Redirect URI: `http://localhost:5173/callback`
+   - Redirect URI: `http://localhost/callback` (Simkl ignores the port for loopback addresses)
 2. Get a TMDB API read access token at <https://www.themoviedb.org/settings/api>.
 3. Copy `.env.example` to `.env.local` and fill in both values.
 

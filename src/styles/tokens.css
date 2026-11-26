@@ -1,0 +1,156 @@
+/*
+ * Bingit design tokens — "Calm" layout, "Combination" palette.
+ * Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m
+ *
+ * Theme: light values on :root. Dark applies when the OS prefers dark and the
+ * user has not forced light, or when <html data-theme="dark"> is set.
+ * Components use only these semantic tokens, never raw hex values.
+ *
+ * Breakpoint (custom properties don't work in media queries):
+ *   desktop layout (sidebar, master-detail) at min-width: 64rem (1024px).
+ */
+
+:root {
+  /* ---- Color: light ---- */
+  --color-bg: #f7f1f4;
+  --color-surface: #fffbfc;
+  --color-surface-sunken: #eee3e9; /* segmented controls, tracks behind tabs */
+  --color-surface-raised: #fffbfc; /* selected segment */
+  --color-border: #e6d6df;
+  --color-border-subtle: #f1e7ec; /* row separators, stat tiles */
+  --color-text: #21101a;
+  --color-text-muted: #705a67;
+  --color-action: #4b1d3f; /* mulberry: primary buttons, active nav, checks */
+  --color-on-action: #ffffff;
+  --color-wash: #f6e3e5; /* velvet rose wash: status badge, selected row */
+  --color-on-wash: #7e3440;
+  --color-highlight: #fdeee6; /* apricot wash: next episode, ratings */
+  --color-on-highlight: #8a3a1c;
+  --color-progress: #c97b84;
+  --color-track: #e6d6df;
+  --color-link: #4b1d3f;
+  --color-danger: #b42318;
+  --color-focus: #4b1d3f;
+  --shadow-raised: 0 1px 2px rgb(33 16 26 / 0.08);
+
+  /* Brand source colors, for artwork fallbacks and gradients only */
+  --brand-mulberry: #4b1d3f;
+  --brand-velvet-rose: #c97b84;
+  --brand-apricot: #f4a988;
+
+  color-scheme: light;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-2xs: 0.6875rem; /* 11px nav labels */
+  --text-xs: 0.75rem; /* 12px episode codes, meta */
+  --text-sm: 0.8125rem; /* 13px secondary text */
+  --text-base: 0.9375rem; /* 15px body, list titles */
+  --text-md: 1rem; /* 16px inputs (prevents iOS zoom) */
+  --text-lg: 1.375rem; /* 22px panel titles */
+  --text-xl: 1.625rem; /* 26px page titles */
+  --text-2xl: 1.75rem; /* 28px big numbers */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-title: 650;
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --tracking-title: -0.02em;
+
+  /* ---- Spacing (4px grid) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem; /* mobile page gutter */
+  --space-6: 1.5rem;
+  --space-7: 1.75rem; /* desktop page gutter */
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* ---- Radius ---- */
+  --radius-sm: 6px; /* posters, badges */
+  --radius-md: 8px; /* buttons, chips */
+  --radius-lg: 10px; /* segmented controls, inputs */
+  --radius-xl: 14px; /* list cards */
+  --radius-full: 999px;
+
+  /* ---- Sizes ---- */
+  --tap-min: 44px;
+  --control-h: 40px;
+  --nav-h: 76px; /* mobile bottom nav, plus safe-area inset */
+  --sidebar-w: 232px;
+  --panel-w: 420px;
+  --content-max: 72rem;
+  --poster-list-w: 44px; /* 2:3 */
+  --poster-card-w: 112px;
+
+  /* ---- Motion ---- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---- Color: dark (same values in both blocks) ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #1c0f17;
+    --color-surface: #27151f;
+    --color-surface-sunken: #321e2a;
+    --color-surface-raised: #4a2f3f;
+    --color-border: #40283a;
+    --color-border-subtle: #321e2a;
+    --color-text: #f6ecf1;
+    --color-text-muted: #bfa4b4;
+    --color-action: #f4a988; /* apricot: mulberry is too dark to act on here */
+    --color-on-action: #3a1420;
+    --color-wash: #3a2229;
+    --color-on-wash: #e6a9b0;
+    --color-highlight: #3a2621;
+    --color-on-highlight: #f4a988;
+    --color-progress: #c97b84;
+    --color-track: #40283a;
+    --color-link: #f4a988;
+    --color-danger: #f97066;
+    --color-focus: #f4a988;
+    --shadow-raised: none;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #1c0f17;
+  --color-surface: #27151f;
+  --color-surface-sunken: #321e2a;
+  --color-surface-raised: #4a2f3f;
+  --color-border: #40283a;
+  --color-border-subtle: #321e2a;
+  --color-text: #f6ecf1;
+  --color-text-muted: #bfa4b4;
+  --color-action: #f4a988;
+  --color-on-action: #3a1420;
+  --color-wash: #3a2229;
+  --color-on-wash: #e6a9b0;
+  --color-highlight: #3a2621;
+  --color-on-highlight: #f4a988;
+  --color-progress: #c97b84;
+  --color-track: #40283a;
+  --color-link: #f4a988;
+  --color-danger: #f97066;
+  --color-focus: #f4a988;
+  --shadow-raised: none;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}

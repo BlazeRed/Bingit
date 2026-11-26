@@ -15,8 +15,8 @@ import { RouterView } from 'vue-router'
 
 <style scoped>
 .attribution {
-  padding: 1rem;
-  font-size: 0.75rem;
-  opacity: 0.7;
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 </style>

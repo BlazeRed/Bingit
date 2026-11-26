@@ -28,9 +28,10 @@
     "format:check": "prettier --check --experimental-cli src/"
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@lucide/vue": "^1.81.0",
     "idb-keyval": "^6.3.0",
-    "openapi-fetch": "^0.17.0",
     "pinia": "^4.0.3",
     "reka-ui": "^2.11.0",
     "vue": "^3.5.42",
