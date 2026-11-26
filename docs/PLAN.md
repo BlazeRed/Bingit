@@ -1,6 +1,6 @@
 # Bingit — project plan
 
-Free, open-source (GPL-3.0) web app to track movies, TV shows and anime on top of Simkl. Static SPA, no own backend, hosted on Netlify free tier. English only.
+Free, open-source (GPL-3.0) web app to track movies, TV shows and anime on top of Simkl. Static SPA, hosted on Netlify free tier; the only server code is a TMDB proxy function. English only.
 
 API facts and limits: see [simkl-api-research.md](./simkl-api-research.md). Technical architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -37,7 +37,7 @@ Browser (SPA)
  ├─ Write queue ── batched POSTs, 1 req/s, optimistic updates
  ├─ Simkl client ─→ api.simkl.com (CORS)        [user data, catalog]
  │                └→ data.simkl.in (static JSON) [trending, calendar]
- ├─ TMDB client  ─→ api.themoviedb.org          [cast, people, art, videos]
+ ├─ TMDB client  ─→ /api/tmdb (Netlify Function) ─→ api.themoviedb.org [cast, people, art, videos]
  ├─ AniList      ─→ graphql.anilist.co          [anime characters, staff, relations]
  └─ Images       ─→ wsrv.nl ← simkl.in / image.tmdb.org
 ```
@@ -60,10 +60,10 @@ src/
 
 ### Auth
 1. Generate `code_verifier` + S256 `code_challenge`, store verifier + `state` in `sessionStorage`.
-2. Redirect to `https://simkl.com/oauth/authorize` (V2) with `client_id`, `redirect_uri`, `scope=media:read media:write`, PKCE params.
-3. `/callback` route checks `state`, exchanges code at token endpoint.
-4. Keep `access_token` (7 d) in memory only; store `refresh_token` (180 d sliding) in IndexedDB and refresh on each app load.
-5. Refresh on 401 or before expiry. Sign-out → revoke endpoint + wipe IndexedDB.
+2. Redirect to `https://simkl.com/oauth2/authorize` with `client_id`, `redirect_uri`, `scope=media:read media:write`, PKCE params.
+3. `/callback` route checks `state` and `iss`, exchanges code at `https://api.simkl.com/oauth2/token`.
+4. Store `access_token` (7 d) and `refresh_token` (180 d sliding) in IndexedDB, shared by all tabs.
+5. Refresh on 401 or before expiry, under a Web Lock. Sign-out → revoke endpoint + wipe IndexedDB.
 - Redirect URIs to register: `http://localhost/callback` (Simkl ignores the port for loopback addresses), `https://<site>.netlify.app/callback` (+ custom domain later). Deploy previews: login unsupported unless URL registered.
 
 ### Sync engine (quota is 500 req/day on Simkl Free)
@@ -87,7 +87,7 @@ src/
 ### TMDB
 - Map via `ids.tmdb` from Simkl records; skip TMDB sections when missing (common for anime).
 - Used for: cast/crew, person pages, backdrops/logos, videos, watch providers.
-- Auth: TMDB v4 read access token in client build (public by nature in an SPA; can be regenerated if abused). Netlify Function proxy is the upgrade path if needed.
+- Auth: TMDB v4 read access token stays server-side. `netlify/functions/tmdb.ts` adds it; it forwards only GET `movie|tv|person/{id}` (sub-resources via `append_to_response`) and caches responses on Netlify's CDN. A new TMDB endpoint needs a new allowed path. In dev, the Vite proxy does the same job (no allowlist).
 - Attribution: TMDB logo + "This product uses the TMDB API but is not endorsed or certified by TMDB." Watch providers require JustWatch attribution.
 
 ### AniList
@@ -99,7 +99,7 @@ src/
 - Attribution: "Anime data from AniList" with link on anime detail pages.
 
 ### Config
-- `.env` (not committed) / Netlify env: `VITE_SIMKL_CLIENT_ID`, `VITE_TMDB_TOKEN`, `VITE_APP_VERSION`. `.env.example` committed so forks register their own keys.
+- `.env` (not committed) / Netlify env: `VITE_SIMKL_CLIENT_ID` (public), `TMDB_TOKEN` (secret, never `VITE_`). The app version comes from `package.json`. `.env.example` committed so forks register their own keys.
 
 ## 4. Features (v1)
 
@@ -124,7 +124,7 @@ Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only w
 
 - **Accessibility:** Reka UI primitives, keyboard navigation, visible focus, WCAG AA contrast in both themes, `prefers-reduced-motion`.
 - **Performance:** route-level code splitting, `loading="lazy"` images with fixed aspect ratio (no CLS), right poster size per context, virtualized long lists only if needed.
-- **Security:** strict CSP in `netlify.toml` (`connect-src` limited to Simkl, TMDB, AniList, wsrv; `img-src` to image hosts), no `v-html` on API text, `state` check in OAuth.
+- **Security:** strict CSP in `netlify.toml` (`connect-src` limited to self, Simkl and AniList; `img-src` to image hosts), no `v-html` on API text, `state` check in OAuth.
 - **Attribution:** Simkl links on cards/details + footer; trending titles name Simkl; TMDB notice in footer/about; AniList credit on anime pages.
 - **Themes:** light + dark via tokens, follows system by default.
 

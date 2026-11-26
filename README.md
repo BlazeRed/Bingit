@@ -18,7 +18,7 @@ Bingit is a free and open-source web app to track movies, TV shows and anime. It
 
 ## How it works
 
-Bingit is a static single-page app. It has no backend and stores no user data on its own servers.
+Bingit is a single-page app with no database and no user data on its own servers. Its only server code is a small Netlify Function that forwards TMDB requests, so the TMDB token stays secret.
 
 | Service | Used for |
 |---|---|
@@ -26,7 +26,7 @@ Bingit is a static single-page app. It has no backend and stores no user data on
 | [TMDB API](https://developer.themoviedb.org) | Cast, crew, people, artwork, videos, watch providers for movies and TV |
 | [AniList API](https://docs.anilist.co) | Characters, staff, relations and airing schedule for anime |
 
-Your Simkl refresh token and a cache of your library are kept in your browser's IndexedDB; the short-lived access token stays in memory only. Signing out removes them and revokes the token.
+Your Simkl tokens and a cache of your library are kept in your browser's IndexedDB. Signing out removes them and revokes the token.
 
 ## Tech stack
 
@@ -52,7 +52,7 @@ Details and reasons: [docs/PLAN.md](docs/PLAN.md). Simkl API notes: [docs/simkl-
 
 AniList needs no key.
 
-These values are public identifiers that end up in the browser bundle. They are not secrets. Never add a client secret to this project.
+The Simkl client ID is a public identifier that ends up in the browser bundle. The TMDB token is a secret: only the proxy reads it, so never rename it with a `VITE_` prefix. Never add a Simkl client secret to this project.
 
 ### Commands
 
@@ -70,7 +70,7 @@ npm run preview      # serve the production build
 
 ## Deployment
 
-The site deploys to Netlify from `main`. Build settings, the SPA fallback and the security headers are in [`netlify.toml`](netlify.toml). Set `VITE_SIMKL_CLIENT_ID` and `VITE_TMDB_TOKEN` in the Netlify environment, and add `https://<your-site>/callback` as a redirect URI in the Simkl app.
+The site deploys to Netlify from `main`. Build settings, the SPA fallback and the security headers are in [`netlify.toml`](netlify.toml). Set `VITE_SIMKL_CLIENT_ID` and `TMDB_TOKEN` (mark it as secret) in the Netlify environment, and add `https://<your-site>/callback` as a redirect URI in the Simkl app.
 
 Sign-in does not work on Netlify deploy previews, because Simkl accepts only registered redirect URIs.
 

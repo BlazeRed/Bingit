@@ -6,14 +6,14 @@ Status: **decided 2026-11-26**. Product and design decisions live in [PLAN.md](.
 
 | Constraint | Source | Consequence |
 |---|---|---|
-| No backend, static hosting on Netlify | project choice | Everything runs in the browser. Only public identifiers ship in the bundle. |
+| No own backend, static hosting on Netlify | project choice | Everything runs in the browser, except one TMDB proxy function. Only public identifiers ship in the bundle. |
 | Simkl, TMDB, AniList all allow CORS | Simkl docs (CORS page), TMDB, AniList | Direct `fetch` from the browser. No proxy needed. |
 | Simkl quota per user/day: Free 500, PRO 1,000, VIP 10,000 | Simkl rate limits | Local mirror of the library; read it, don't re-fetch it. |
 | Simkl: 10 GET/s, **1 POST/s** (overage → temporary block) | Simkl rate limits | Single write queue, batched arrays. |
 | Catalog details, episode lists, trending and calendar files are edge-cached and **don't count** | Simkl rate limits | Use them freely, in parallel, **without** `Authorization` header. |
 | Writes accept TMDB/IMDb/MAL ids directly | Simkl docs | No search-before-write. Adding a trending item = 1 POST. |
 | AniList ~90 req/min (30 when degraded) | AniList docs | One query per anime detail view, cached. |
-| Access token 7 days, refresh token 180 days sliding, non-rotating | Simkl AUTH V2 | Silent refresh; re-login only after 6 months idle or revoke. |
+| Access token 7 days, refresh token 180 days sliding, non-rotating. One live access token per grant: a refresh kills the previous one | Simkl AUTH V2 | Silent refresh, one shared session for all tabs; re-login only after 6 months idle or revoke. |
 
 ## 2. CORS and browser rules, per host
 
@@ -22,7 +22,7 @@ Status: **decided 2026-11-26**. Product and design decisions live in [PLAN.md](.
 | `api.simkl.com` | user data, catalog, search | `Bearer` only on user endpoints | yes when `Authorization` or JSON body | Preflight cached 24 h. Errors (401/429) also carry CORS headers, so JS can read them. No `User-Agent` (forbidden in browsers); identify with `app-name` + `app-version` query params. No `Content-Type` on GET. |
 | `data.simkl.in` | trending + calendar JSON | none | no (simple GET) | Use `cache: 'no-cache'`, never custom headers (CDN rejects preflight). |
 | `simkl.com` | OAuth consent page only | — | — | Full-page redirect, not fetch. |
-| `api.themoviedb.org` | cast, people, art, videos, providers | `Bearer <read token>` | yes | Token is public in the bundle; regenerate if abused. |
+| `/api/tmdb/*` (same origin) → `api.themoviedb.org` | cast, people, art, videos, providers | added by the Netlify Function | no | Token never reaches the browser. The endpoint is public, so it allows only GET on paths the app reads. Cached 24 h on the CDN; misses use the function quota. |
 | `graphql.anilist.co` | anime characters, staff, relations | none | yes (JSON POST) | |
 | `wsrv.nl`, `simkl.in`, `image.tmdb.org`, `s4.anilist.co` | images | — | — | `<img>` only. Must match CSP `img-src`. |
 
@@ -70,14 +70,14 @@ Rule: views never call `api/` for user data; they read stores. Catalog/TMDB/AniL
 ## 5. Auth flow (AUTH V2, PKCE, public client)
 
 1. "Sign in with Simkl" → create `code_verifier` (Web Crypto), S256 `code_challenge`, random `state`; keep both in `sessionStorage`.
-2. Redirect to `https://simkl.com/oauth/authorize?...` (V2 path per docs).
-3. `/callback`: verify `state`, POST code + verifier to the token endpoint, store tokens, clean URL, start initial sync.
-4. Every Simkl user call: if access token expires within 5 min → refresh first. On 401 → refresh once → else sign out with a message.
-5. Sign out: revoke token, clear IndexedDB + storage.
+2. Redirect to `https://simkl.com/oauth2/authorize?...` with `scope=media:read media:write`.
+3. `/callback`: verify `state` and `iss`, POST code + verifier to `/oauth2/token`, check the granted scope, store the session, clean the URL, start initial sync.
+4. Every Simkl user call: if the access token expires within 5 min → refresh first. On 401 → get a new token (refresh only if no other tab did) → retry once → else sign out with a message. Only `invalid_grant` ends the session; offline and 5xx keep it.
+5. Sign out: revoke token, clear IndexedDB.
 
 Redirect URIs to register: `http://localhost/callback` (loopback: port ignored) and `https://<site>/callback`.
 
-**Token storage (decided):** refresh token in IndexedDB, access token in memory only. On each app load the app exchanges the refresh token for a fresh access token (one token call; tabs refresh independently, which is safe because refresh tokens don't rotate). Nothing token-related in `localStorage`. CSP stays the main XSS defense.
+**Token storage (decided, revised during M1):** access token, refresh token and expiry live in IndexedDB; all tabs share them and refresh under a Web Lock. The earlier plan (access token in memory, each tab refreshes on load) does not work: a refresh invalidates the previous access token, so tabs would cut each other off. Keeping the access token next to the refresh token adds no exposure. Nothing token-related in `localStorage`. Simkl advises against refresh tokens in the browser at all; we accept that risk to keep users signed in without a backend, and CSP is the main XSS defense.
 
 ## 6. Sync engine
 
@@ -132,7 +132,7 @@ Redirect URIs to register: `http://localhost/callback` (loopback: port ignored) 
 - CSP in `netlify.toml` (already set): scripts `'self'` only, `connect-src` limited to the hosts above.
 - Never render API text as HTML (`v-html` banned via ESLint rule).
 - OAuth `state` check; PKCE verifier never leaves `sessionStorage`.
-- Only public ids in env (`VITE_SIMKL_CLIENT_ID`, `VITE_TMDB_TOKEN`).
+- Only public ids get the `VITE_` prefix (`VITE_SIMKL_CLIENT_ID`). `TMDB_TOKEN` is secret and server-side only.
 
 ## 13. Import / export
 

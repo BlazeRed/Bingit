@@ -16,6 +16,10 @@ Source: https://api.simkl.org (official docs, moved from Apiary in 2026). Machin
 - Flow: OAuth 2.0 authorization code + **PKCE (S256 mandatory)**. Device/PIN flow also available.
 - Scopes: `media:read`, `media:read media:write`.
 - Lifetimes: access token 7 days; refresh token 180 days **sliding, non-rotating**; auth code 10 min single-use.
+- Endpoints: `https://simkl.com/oauth2/authorize` (browser), `https://api.simkl.com/oauth2/token`, `/oauth2/revoke`.
+- Callback returns `state` and `iss=https://simkl.com`; check both.
+- A refresh invalidates the previous access token (one live token per grant).
+- V2 needs a user token on everything except catalog summaries, episode lists, trending/calendar files and `/redirect`. Search needs a token.
 - Revoke endpoint (RFC 7009) on sign-out.
 - `client_id` is public — fine to commit in an open-source repo. Never ship a secret.
 
