@@ -16,8 +16,9 @@ Bingit is a free and open-source web app to track movies, TV shows and anime. It
 - Search, with trending, genres, top rated and premieres.
 - Your stats, export to JSON or CSV, and restore from a Bingit backup.
 - Light and dark themes, keyboard friendly.
+- Installable on phone and desktop; opens without a connection.
 
-Planned: watch providers, installable app, importers from other trackers.
+Planned: watch providers, importers from other trackers.
 
 ## How it works
 
@@ -68,7 +69,7 @@ npm run type-check   # check types
 npm run lint         # lint and fix
 npm run format       # format with Prettier
 npm run build        # type-check and build to dist/
-npm run preview      # serve the production build
+npm run preview      # serve the production build (the only way to try the installed app locally)
 ```
 
 ## Deployment

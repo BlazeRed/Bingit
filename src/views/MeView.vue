@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 import { version } from '../../package.json'
 import BackupSection from '@/components/BackupSection.vue'
+import InstallSection from '@/components/InstallSection.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import StatsSection from '@/components/StatsSection.vue'
 import SyncSection from '@/components/SyncSection.vue'
@@ -48,6 +49,7 @@ function signOut() {
       <SegmentedControl v-model="theme" :options="THEMES" label="Theme" />
     </section>
 
+    <InstallSection />
     <SyncSection />
     <BackupSection />
 

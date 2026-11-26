@@ -4,6 +4,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import AddedToast from '@/components/AddedToast.vue'
 import AppNav from '@/components/AppNav.vue'
+import AppUpdate from '@/components/AppUpdate.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import WriteFailures from '@/components/WriteFailures.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -91,6 +92,7 @@ onUnmounted(() => {
 
   <WriteFailures v-if="auth.status === 'signedIn'" />
   <AddedToast v-if="auth.status === 'signedIn'" />
+  <AppUpdate />
 
   <div :class="{ shell: auth.status === 'signedIn' }">
     <SearchBar v-if="auth.status === 'signedIn' && route.name !== 'search'" @open="goToSearch" />

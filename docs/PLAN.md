@@ -25,7 +25,8 @@ API facts and limits: see [simkl-api-research.md](./simkl-api-research.md). Tech
 | Hosting/CI | Netlify (build from `main`), GitHub Actions for lint + typecheck + test |
 | i18n | None. English strings inline |
 | License | GPL-3.0 |
-| Later | PWA (`vite-plugin-pwa`), Playwright e2e, TanStack Query if caching gets complex |
+| PWA | `vite-plugin-pwa`: installable, offline start (M6) |
+| Later | Playwright e2e, TanStack Query if caching gets complex |
 
 ## 2. Architecture
 
@@ -152,7 +153,7 @@ Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only w
 | M3 | Detail + actions | Detail pages, write queue, status/rating/episode toggles |
 | M4 | Discover | Search with discover, Up next (with calendar bottom sheet), Person and Staff |
 | M5 | Home + polish | Me (stats, settings, export + restore), desktop Library side panel, a11y pass, empty/error states |
-| M6 | Extras | PWA, PRO features, importers (IMDb, Letterboxd, Trakt, MAL), e2e tests |
+| M6 | Extras | PWA (built), PRO features, importers (IMDb, Letterboxd, Trakt, MAL), e2e tests |
 
 ## 8. Design and screen layout
 
@@ -202,6 +203,10 @@ Full-width backdrop (brand gradient when there is none) with a back button, over
 
 "+ Add" becomes "✓ Added" for titles added in this session, with an "Undo" message. Undo removes the title only while it has no history or rating.
 
+### Installed app (PWA)
+
+Me shows an "Install" section (not in the mock) when the browser can install, or with "Add to Home Screen" steps on iPhone and iPad; it is hidden once installed. A new version shows "Reload / Later" at the top; nothing reloads on its own.
+
 ### Still different from the mocks
 
 | Screen | Mock | Now |
@@ -214,6 +219,8 @@ Full-width backdrop (brand gradient when there is none) with a back button, over
 ## 9. Open items
 
 - App name / domain (repo is "Bingit").
+- App icon is a placeholder (`public/icons/`).
+- Verify sign-in inside the installed app on iPhone and Android.
 
 ## 10. Data sources considered and skipped
 
