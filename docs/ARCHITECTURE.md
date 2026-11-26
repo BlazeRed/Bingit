@@ -33,8 +33,12 @@ Status: **decided 2026-11-26**. Product and design decisions live in [PLAN.md](.
 | Screen / action | Data source | Quota cost |
 |---|---|---|
 | Up next · Continue watching | local mirror (`next_to_watch`, counts) | 0 |
-| Up next · New this week | calendar JSON ∩ library ids | 0 |
-| Up next · Most watched on Simkl | trending JSON (today/week/month × type) | 0 |
+| Up next · New this week + calendar sheet | calendar JSON ∩ library ids | 0 |
+| Up next · Most watched on Simkl | trending JSON (week × type) | 0 |
+| Up next · episode names and artwork | `GET /…/episodes/{id}` and details per card | 0 (edge-cached) |
+| Search · discover | trending + genre JSON | 0 |
+| Search · top rated, premieres | `GET /{tv,anime}/best`, `/premieres` | 1 per list per session |
+| Person role → title | `GET /search/id` (only if not in library) | 1, cached 7 days |
 | Library (all buckets) | local mirror | 0 |
 | Detail · metadata, episodes | `GET /tv|movies|anime/{id}`, `/…/episodes/{id}` | 0 (edge-cached) |
 | Detail · watched episodes | local mirror (`extended=full` keeps episode numbers for watching/plan/hold) | 0 |
@@ -56,16 +60,18 @@ Not possible with the API: social features (friends, comments, feed), push notif
 ## 4. Layers
 
 ```
-views/            route screens (Up next, Library, Detail, Search, Me)
-components/       UI built on Reka UI + tokens
-stores/ (Pinia)   auth · library · prefs        ← views read only from here
+views/            route screens (Up next, Library, Title, Search, Person, Staff)
+components/       UI parts on tokens; Reka UI where a primitive is needed (calendar sheet)
+composables/      useAsync: load on change, ignore late answers, handle a lost session
+stores/ (Pinia)   auth · library (mirror + pending changes)
+library/ home/ title/ discover/    pure logic, unit tested
 sync/             engine (activities gate, delta pull) · write-queue
-api/              simkl · tmdb · anilist · images  (thin typed fetch wrappers)
-db/               IndexedDB (idb-keyval): library mirror, snapshot, caches
+api/              thin typed fetch wrappers
+db/               capped response cache
 auth/             PKCE, token storage, refresh
 ```
 
-Rule: views never call `api/` for user data; they read stores. Catalog/TMDB/AniList reads go through one small `cachedFetch(key, ttl, loader)` helper backed by IndexedDB.
+Rule: user data (library, status, ratings) is read from the stores only. Public data (catalog, trending, calendar, people) is loaded by `api/` functions through `useAsync`; slow-changing responses go through `cachedFetch(key, ttl, loader)` in IndexedDB.
 
 ## 5. Auth flow (AUTH V2, PKCE, public client)
 
@@ -123,7 +129,9 @@ Code: `src/sync/write-queue.ts`, `src/library/ops.ts`.
 
 ## 9. Search
 
-**Decided: search as you type**, debounced 400 ms, min 3 chars, one request in flight (abort the previous), results cached per query for the session. ~2–4 requests per search.
+**Decided: search as you type**, debounced 400 ms, min 3 chars, one request in flight (abort the previous), results cached per query for the session. ~2–4 requests per search. `/` opens search.
+
+Other discovery costs: trending, genre and calendar files are free. Top rated and premieres cost one request per list per session. A TMDB or AniList link (`/find/...`) uses the library when it can, else one `/search/id` request, cached 7 days.
 
 ## 10. Errors and limits in the UI
 

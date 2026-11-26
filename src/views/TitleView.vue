@@ -174,19 +174,28 @@ const nextAiring = computed(() => {
         />
       </template>
 
-      <PeopleList v-if="cast.length" title="Cast · TMDB" :people="cast" />
+      <PeopleList v-if="cast.length" title="Cast · TMDB" :people="cast" profile="person" />
       <PeopleList
         v-if="anime?.characters.length"
         title="Characters and voice actors"
         :people="anime.characters"
+        profile="staff"
       />
-      <PeopleList v-if="anime?.staff.length" title="Staff" :people="anime.staff" />
+      <PeopleList v-if="anime?.staff.length" title="Staff" :people="anime.staff" profile="staff" />
 
       <section v-if="anime?.relations.length">
-        <h2>Related on AniList</h2>
+        <h2>Related</h2>
         <ul class="links">
           <li v-for="related in anime.relations" :key="related.id">
-            <a :href="related.url" target="_blank" rel="noopener">{{ related.title }}</a>
+            <RouterLink
+              v-if="related.isAnime"
+              :to="{ name: 'find', params: { source: 'anilist', id: related.id } }"
+            >
+              {{ related.title }}
+            </RouterLink>
+            <a v-else :href="related.url" target="_blank" rel="noopener">
+              {{ related.title }}
+            </a>
             <span class="muted">{{ related.relation }}</span>
           </li>
         </ul>

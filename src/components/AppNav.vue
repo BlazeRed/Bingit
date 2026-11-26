@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
-import { Bookmark, LibraryBig } from '@lucide/vue'
+import { Bookmark, LibraryBig, Search } from '@lucide/vue'
 
 import { parseSelection, TYPES } from '@/library/browse'
 import { useLibraryStore } from '@/stores/library'
@@ -21,6 +21,9 @@ const isCurrentType = (type: string) =>
     </RouterLink>
     <RouterLink class="nav__link" :to="{ name: 'library' }">
       <LibraryBig :size="22" aria-hidden="true" />Library
+    </RouterLink>
+    <RouterLink class="nav__link" :to="{ name: 'search' }">
+      <Search :size="22" aria-hidden="true" />Search
     </RouterLink>
 
     <div class="nav__shortcuts">

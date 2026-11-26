@@ -42,18 +42,23 @@ Browser (SPA)
  └─ Images       ─→ wsrv.nl ← simkl.in / image.tmdb.org
 ```
 
-### Source layout (initial, grows only when needed)
+### Source layout
 
 ```
 src/
-  main.ts  App.vue  router.ts
-  styles/        tokens.css, base.css
-  api/           simkl.ts, simkl-types.ts, tmdb.ts, anilist.ts, images.ts
-  auth/          pkce.ts, session.ts
-  sync/          engine.ts, write-queue.ts
-  stores/        auth.ts, library.ts
-  components/    shared UI built on Reka UI
+  main.ts  App.vue  router/
+  styles/        tokens.css, base.css (shared page parts)
+  api/           simkl, tmdb, anilist, catalog, discover, people, images
+  auth/          pkce, session
+  db/            capped response cache
+  sync/          engine, write-queue
+  stores/        auth, library
+  library/       item model, filtering, pending changes (pure logic)
+  home/  title/  discover/    pure logic per screen
+  composables/   useAsync
+  components/    UI parts; Reka UI where a primitive is needed
   views/         one file per route
+netlify/functions/  tmdb proxy
 ```
 
 ## 3. Data layer
@@ -80,8 +85,8 @@ src/
 ### Catalog
 - `GET /movies|tv|anime/{id}` and episode lists: free + edge-cached → no `Authorization` header, parallel OK.
 - Trending + calendar: static JSON from `data.simkl.in`.
-- Search: sequential, debounced (≥ 400 ms, min 2 chars).
-- `/users/{id}/stats`: only when user opens Stats page.
+- Search: sequential, debounced (≥ 400 ms, min 3 chars).
+- `/users/{id}/stats`: only on explicit request (Me page).
 
 ### TMDB
 - Map via `ids.tmdb` from Simkl records; skip TMDB sections when missing (common for anime).
@@ -102,20 +107,20 @@ src/
 
 ## 4. Features (v1)
 
-| Route | Content |
-|---|---|
-| `/` (signed out) | Landing: what it is, sign in with Simkl, trending on Simkl |
-| `/` (signed in) | Up next: continue watching (`next_to_watch`), new episodes this week (calendar ∩ library), most watched on Simkl this week |
-| `/library/:type?/:status?` | Library by type × status, sort, filter, grid/list, local search |
-| `/movie/:id`, `/tv/:id`, `/anime/:id` | Detail: art, info, ratings, status picker, rating, mark watched, seasons/episodes with per-episode toggles, cast (TMDB) or characters/staff/relations (AniList for anime), trailers, similar, "View on Simkl" |
-| `/person/:tmdbId` | TMDB person + credits, linked to Simkl items where mapped |
-| `/staff/:anilistId` | AniList staff / voice actor + roles, linked to Simkl items where mapped |
-| `/search` | Text search across types |
-| `/discover` | Trending, best, premieres, airing, genres |
-| `/calendar` | Upcoming episodes / releases, filter "my shows" |
-| `/stats` | User stats (on demand) |
-| `/me` | Profile, stats on demand, theme, sync status + quota, export (JSON, CSV), restore from Bingit JSON, clear local data, about, sign out |
-| `/callback` | OAuth return |
+| Route | Content | State |
+|---|---|---|
+| `/` (signed out) | Landing: what it is, sign in with Simkl, trending on Simkl | sign-in button only; rest M5 |
+| `/` (signed in) | Up next: continue watching, new this week (opens the calendar bottom sheet), most watched on Simkl this week. Layout: §8 | built |
+| `/library/:type?/:bucket?` | Library by type × bucket, sort, grid/list, title filter, mark next episode | built |
+| `/movie/:id`, `/tv/:id`, `/anime/:id` | Title page: art, info, ratings, status, your rating, mark watched, seasons/episodes, cast (TMDB) or characters/staff/relations (AniList), trailers, similar, "View on Simkl" | built; no watch providers yet |
+| `/search` | Search as you type; with an empty box it shows discover. Layout: §8 | built |
+| `/person/:tmdbId` | TMDB person + roles; a role opens the Simkl title | built |
+| `/staff/:anilistId` | AniList staff / voice actor + roles; a role opens the Simkl title | built |
+| `/find/:source/:id` | Hidden step: turns a TMDB or AniList id into the Simkl title page | built |
+| `/me` | Profile, stats on demand, theme, sync status + quota, export (JSON, CSV), restore from Bingit JSON, clear local data, about, sign out | M5 |
+| `/callback` | OAuth return | built |
+
+There is no separate Discover, Calendar or Stats page: discover lives in Search, the calendar is a sheet on Up next, stats are part of Me.
 
 Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only when the account supports them.
 
@@ -144,11 +149,11 @@ Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only w
 | M1 | Auth + clients | Sign in/out works on localhost and Netlify; typed Simkl + TMDB + AniList clients |
 | M2 | Sync + Library | Initial + delta sync into IndexedDB; Library view |
 | M3 | Detail + actions | Detail pages, write queue, status/rating/episode toggles |
-| M4 | Discover | Search, Discover, Calendar, Person |
-| M5 | Home + polish | Up next, Me (stats, settings, export + restore), desktop Library side panel, a11y pass, empty/error states |
+| M4 | Discover | Search with discover, Up next (with calendar bottom sheet), Person and Staff |
+| M5 | Home + polish | Me (stats, settings, export + restore), desktop Library side panel, a11y pass, empty/error states |
 | M6 | Extras | PWA, PRO features, importers (IMDb, Letterboxd, Trakt, MAL), e2e tests |
 
-## 8. Design decisions (in progress)
+## 8. Design and screen layout
 
 Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 
@@ -159,14 +164,40 @@ Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 - Palette: "Combination" — mulberry #4B1D3F (light-mode action), apricot #F4A988 (dark-mode action, next-episode/rating highlight), velvet rose #C97B84 (progress, status). Neutrals tinted toward mulberry.
 - Font: Geist (UI) + Geist Mono (episode codes, runtimes, ratings), self-hosted via `@fontsource-variable` (no Google Fonts request).
 - Tokens: `src/styles/tokens.css` (semantic color, type, spacing, radius, sizes, motion; light + dark).
-- Up next = home screen: Continue watching (`next_to_watch`, one-tap ✓), New this week (calendar ∩ my shows), "Most watched on Simkl this week" (trending files, Movies/TV/Anime, quick + Watchlist). Trending files are free and don't use the daily quota.
 - Me: profile + link to Simkl, export (Bingit JSON + CSV) and restore from Bingit JSON (details: ARCHITECTURE.md §13), stats on demand ("Load my stats" — expensive call), theme System/Light/Dark, sync status + Sync now, Simkl requests used today (from `X-RateLimit-*` headers), clear local data, about/attribution, sign out.
-- Desktop (≥ ~1024px): left sidebar replaces bottom nav (+ Library category shortcuts with counts), search in top bar (`/` shortcut). Library = table rows + detail side panel (master-detail). Up next = 3-col continue-watching cards, 6-col most-watched grid, right column for new episodes + recently added.
+- The approved mocks win over the feature table: new pages or navigation entries need agreement first.
+
+### Up next (`/`)
+
+1. Header: "N in progress · M new episodes this week".
+2. **Continue watching**: up to 6 shows in progress, most recently watched first. Poster, title, next episode code and name, progress, one-tap ✓ (the row moves to the following episode at once).
+3. **New this week**: next 7 days of the calendar ∩ library (dropped titles excluded), up to 5 rows with date, the first one highlighted. A row, or the "Calendar" link, opens the **calendar bottom sheet**: Movies / TV / Anime, "Only titles in my library" (on by default), days from today, 7 at a time; without the filter, the 15 most popular per day plus "Show all".
+4. **Most watched on Simkl this week**: Movies / TV / Anime, ranked posters with quick add to Watchlist, link "Discover more in Search". Trending files are free and don't use the daily quota.
+
+Desktop: search box link on top; two columns. Left: continue watching as 3 landscape cards, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
+
+### Search (`/search`)
+
+- Empty box → **discover**: category, list (trending today / week / month; top rated, new premieres, coming soon for TV and anime), genre; rows with quick add.
+- Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` focuses it from anywhere.
+
+### Navigation
+
+Up next · Library · Search (Me joins in M5). Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts and counts.
+
+### Still different from the mocks
+
+| Screen | Mock | Now |
+|---|---|---|
+| Title page | Full-width backdrop with overlapping poster and back button, compact status + progress, next episode highlighted, single cast row | Rounded image, native status select, no highlight, cast grid |
+| Library | "Paused · Dropped" as a small link; desktop table + detail side panel | Extra tabs; list on all sizes (side panel: M5) |
+| Desktop | Search input in a top bar; user and sync status in the sidebar | Search link on Up next only; neither in the sidebar |
+| Add to Watchlist | Toggle with Undo | Add only; remove from the title page |
+| Sign out | On Me | At the bottom of Up next until M5 |
 
 ## 9. Open items
 
 - App name / domain (repo is "Bingit").
-- Register Simkl app (V2, "Mobile, desktop & browser apps") and TMDB key — owner: you.
 
 ## 10. Data sources considered and skipped
 

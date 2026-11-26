@@ -20,6 +20,16 @@ interface UserRequest {
   query?: Record<string, string>
   /** Presence of a body makes the request a POST. */
   body?: unknown
+  signal?: AbortSignal
+}
+
+/**
+ * Static trending and calendar files: free, no token. The CDN rejects custom
+ * headers; `no-cache` revalidates with the browser's HTTP cache.
+ */
+export async function simklData<T>(path: string): Promise<T> {
+  const url = simklUrl(path, {}, 'https://data.simkl.in')
+  return readJson<T>(await fetch(url, { cache: 'no-cache' }))
 }
 
 /** User endpoints. Retries once with a new token after a 401. */
@@ -32,6 +42,7 @@ export async function simklUser<T>(path: string, request: UserRequest = {}): Pro
         ...(request.body !== undefined && { 'Content-Type': 'application/json' }),
       },
       body: request.body === undefined ? undefined : JSON.stringify(request.body),
+      signal: request.signal,
     })
 
   const token = await getAccessToken()

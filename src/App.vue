@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import AppNav from '@/components/AppNav.vue'
@@ -39,11 +39,24 @@ function sendWhenOnline() {
   if (auth.status === 'signedIn') void library.send()
 }
 
+/** `/` jumps to search, unless the user is typing. */
+async function openSearch(event: KeyboardEvent) {
+  const target = event.target as HTMLElement
+  const isTyping = target.closest('input, textarea, select') !== null
+  if (event.key !== '/' || isTyping || auth.status !== 'signedIn') return
+  event.preventDefault()
+  await router.push({ name: 'search', query: route.name === 'search' ? route.query : {} })
+  await nextTick()
+  document.getElementById('search-input')?.focus()
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', openSearch)
   document.addEventListener('visibilitychange', syncOnReturn)
   window.addEventListener('online', sendWhenOnline)
 })
 onUnmounted(() => {
+  window.removeEventListener('keydown', openSearch)
   document.removeEventListener('visibilitychange', syncOnReturn)
   window.removeEventListener('online', sendWhenOnline)
 })
@@ -55,9 +68,9 @@ onUnmounted(() => {
   <WriteFailures v-if="auth.status === 'signedIn'" />
 
   <div :class="{ shell: auth.status === 'signedIn' }">
-    <!-- A title page is rebuilt per title; other views keep their state. -->
+    <!-- Detail pages are rebuilt per title or person; other views keep their state. -->
     <RouterView v-slot="{ Component }">
-      <component :is="Component" :key="route.name === 'title' ? route.path : route.name" />
+      <component :is="Component" :key="route.meta.perPath ? route.path : route.name" />
     </RouterView>
 
     <!-- Attribution required by Simkl, TMDB and AniList terms. See docs/simkl-api-research.md -->

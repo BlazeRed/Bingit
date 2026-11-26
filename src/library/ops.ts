@@ -10,8 +10,11 @@ import type { LibraryItem } from './item'
 export type Change =
   | { kind: 'status'; to: SimklStatus }
   | { kind: 'remove' }
-  /** Without `episodes`: the whole title (a movie). */
-  | { kind: 'watch'; episodes?: Episodes }
+  /**
+   * Without `episodes`: the whole title (a movie). `next` is the code of the
+   * following episode, when the caller knows the episode list.
+   */
+  | { kind: 'watch'; episodes?: Episodes; next?: string }
   | { kind: 'unwatch'; episodes: Episodes }
   | { kind: 'rate'; rating: number | null }
 
@@ -64,8 +67,8 @@ function applyOp(current: LibraryItem | undefined, op: Op): LibraryItem | undefi
         seasons: watched,
         watchedCount: item.watchedCount + added,
         lastWatchedAt: op.at,
-        // The next episode is unknown until Simkl answers.
-        nextToWatch: next && added ? null : next,
+        // Without `op.next`, the next episode is unknown until Simkl answers.
+        nextToWatch: next && added ? (op.next ?? null) : next,
       }
     }
     case 'unwatch': {

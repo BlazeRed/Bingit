@@ -4,17 +4,19 @@ Track it. Binge it. Sync it.
 
 Bingit is a free and open-source web app to track movies, TV shows and anime. It runs on top of your [Simkl](https://simkl.com) account: your watchlists, history and ratings stay on Simkl, and Bingit gives you a cleaner way to use them.
 
-> **Status:** early development. Nothing to use yet. See the [project plan](docs/PLAN.md).
+> **Status:** early development. Sign-in, library, title pages, search and the Up next screen work; settings, stats and export come next. See the [project plan](docs/PLAN.md).
 
-## Features (planned)
+## Features
 
 - Sign in with your Simkl account. No new account, no extra password.
-- One library for movies, TV shows and anime, by status: watching, plan to watch, on hold, dropped, completed.
-- "Continue watching" with the next episode for every show.
-- Mark episodes, seasons and movies as watched. Rate titles.
-- Detail pages with cast, crew, trailers and where to watch (TMDB), and characters, voice actors and related works for anime (AniList).
-- Search, trending, top rated, premieres and an episode calendar.
+- **Up next:** continue watching with a one-tap button, new episodes of the week with a calendar, and what is most watched on Simkl.
+- One library for movies, TV shows and anime, by status: watchlist, watching, seen, paused, dropped.
+- Mark episodes, seasons and movies as watched. Rate titles. Changes made offline are sent later.
+- Title pages with cast (TMDB), and characters, voice actors and related works for anime (AniList). Person pages.
+- Search, with trending, genres, top rated and premieres.
 - Light and dark themes, keyboard friendly.
+
+Planned: profile and settings, stats, export and restore, watch providers, installable app.
 
 ## How it works
 
