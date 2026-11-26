@@ -6,7 +6,12 @@ import type { SimklEpisode } from '@/api/catalog'
 import type { Episodes } from '@/library/episodes'
 import type { Season } from '@/title/model'
 
-const props = defineProps<{ seasons: Season[]; watched: Episodes }>()
+const props = defineProps<{
+  seasons: Season[]
+  watched: Episodes
+  /** Side panel: only the current season, small rows. */
+  compact?: boolean
+}>()
 const emit = defineEmits<{ watch: [episodes: Episodes]; unwatch: [episodes: Episodes] }>()
 
 const isWatched = (season: number, episode: number) =>
@@ -21,6 +26,10 @@ const selected = ref((firstOpenSeason ?? props.seasons.at(-1))?.number)
 const season = computed(() => props.seasons.find((s) => s.number === selected.value))
 const aired = computed(() => season.value?.episodes.filter((e) => e.aired) ?? [])
 const unwatched = computed(() => aired.value.filter((e) => !isWatched(selected.value!, e.episode)))
+
+/** The first aired episode still to watch. */
+const next = computed(() => unwatched.value[0])
+const watchedInSeason = computed(() => aired.value.length - unwatched.value.length)
 
 const inSeason = (episodes: SimklEpisode[]): Episodes => ({
   [selected.value!]: episodes.map((e) => e.episode),
@@ -49,8 +58,11 @@ const airDate = (date?: string | null) =>
 </script>
 
 <template>
-  <section class="episodes" aria-label="Episodes">
-    <div class="episodes__bar">
+  <section class="episodes" :class="{ 'episodes--compact': compact }" aria-label="Episodes">
+    <p v-if="compact" class="episodes__summary">
+      Season {{ selected }} · {{ watchedInSeason }} of {{ season?.episodes.length }} watched
+    </p>
+    <div v-else class="episodes__bar">
       <div v-if="seasons.length > 1" class="episodes__seasons">
         <button
           v-for="s in seasons"
@@ -70,7 +82,11 @@ const airDate = (date?: string | null) =>
     </div>
 
     <ol>
-      <li v-for="episode in season?.episodes" :key="episode.episode">
+      <li
+        v-for="episode in season?.episodes"
+        :key="episode.episode"
+        :class="{ episodes__next: episode === next }"
+      >
         <button
           type="button"
           class="check"
@@ -83,12 +99,14 @@ const airDate = (date?: string | null) =>
         </button>
         <div class="episodes__text">
           <span class="episodes__meta mono">
-            {{ code(episode.episode) }} · {{ airDate(episode.date) }}
+            {{ code(episode.episode) }}
+            <template v-if="!compact"> · {{ airDate(episode.date) }}</template>
+            <template v-if="episode === next"> · NEXT</template>
           </span>
           <span>{{ episode.title || `Episode ${episode.episode}` }}</span>
         </div>
         <button
-          v-if="episode.aired && unwatched.indexOf(episode) > 0"
+          v-if="!compact && episode.aired && unwatched.indexOf(episode) > 0"
           type="button"
           class="chip"
           :aria-label="`Mark watched up to episode ${episode.episode}`"
@@ -195,6 +213,41 @@ li + li {
   flex: 1;
   flex-direction: column;
   min-width: 0;
+}
+
+.episodes__next {
+  background: var(--color-highlight);
+}
+
+.episodes__next .episodes__meta {
+  color: var(--color-on-highlight);
+}
+
+.episodes__summary {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+}
+
+.episodes--compact li {
+  padding-block: var(--space-1);
+}
+
+.episodes--compact .check {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+}
+
+.episodes--compact .episodes__text {
+  flex-direction: row;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.episodes--compact .episodes__meta {
+  flex: none;
+  min-width: 4rem;
 }
 
 .episodes__meta {

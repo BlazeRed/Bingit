@@ -2,7 +2,9 @@
 import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
+import AddedToast from '@/components/AddedToast.vue'
 import AppNav from '@/components/AppNav.vue'
+import SearchBar from '@/components/SearchBar.vue'
 import WriteFailures from '@/components/WriteFailures.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -54,25 +56,29 @@ watch(
   },
 )
 
-/** `/` jumps to search, unless the user is typing. */
-async function openSearch(event: KeyboardEvent) {
-  const target = event.target as HTMLElement
-  const isTyping = target.closest('input, textarea, select') !== null
-  if (event.key !== '/' || isTyping || auth.status !== 'signedIn') return
-  event.preventDefault()
+async function goToSearch() {
   await router.push({ name: 'search', query: route.name === 'search' ? route.query : {} })
   await nextTick()
   document.getElementById('search-input')?.focus()
 }
 
+/** `/` jumps to search, unless the user is typing. */
+function onSlash(event: KeyboardEvent) {
+  const target = event.target as HTMLElement
+  const isTyping = target.closest('input, textarea, select') !== null
+  if (event.key !== '/' || isTyping || auth.status !== 'signedIn') return
+  event.preventDefault()
+  void goToSearch()
+}
+
 onMounted(() => {
-  window.addEventListener('keydown', openSearch)
+  window.addEventListener('keydown', onSlash)
   document.addEventListener('visibilitychange', syncOnReturn)
   window.addEventListener('online', sendWhenOnline)
   window.addEventListener('offline', trackOnline)
 })
 onUnmounted(() => {
-  window.removeEventListener('keydown', openSearch)
+  window.removeEventListener('keydown', onSlash)
   document.removeEventListener('visibilitychange', syncOnReturn)
   window.removeEventListener('online', sendWhenOnline)
   window.removeEventListener('offline', trackOnline)
@@ -84,8 +90,11 @@ onUnmounted(() => {
   <AppNav v-if="auth.status === 'signedIn'" />
 
   <WriteFailures v-if="auth.status === 'signedIn'" />
+  <AddedToast v-if="auth.status === 'signedIn'" />
 
   <div :class="{ shell: auth.status === 'signedIn' }">
+    <SearchBar v-if="auth.status === 'signedIn' && route.name !== 'search'" @open="goToSearch" />
+
     <p v-if="!isOnline" class="offline" role="status">
       You are offline. Changes are saved and sent later.
     </p>

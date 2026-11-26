@@ -36,6 +36,7 @@ function pick(event: Event) {
 
 <style scoped>
 select {
+  max-width: 11rem;
   min-height: var(--tap-min);
   padding: 0 var(--space-3);
   border: 0;

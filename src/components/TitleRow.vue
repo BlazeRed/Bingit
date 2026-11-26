@@ -6,10 +6,12 @@ import type { Card } from '@/api/discover'
 import { posterUrl } from '@/api/images'
 import { BUCKETS, TYPES } from '@/library/browse'
 import { useLibraryStore } from '@/stores/library'
-import { routeType, seedItem } from '@/title/model'
+import { useQuickAdd } from '@/composables/useQuickAdd'
+import { routeType } from '@/title/model'
 
 const props = defineProps<{ card: Card; note?: string }>()
 const library = useLibraryStore()
+const { isJustAdded, toggle } = useQuickAdd(() => props.card)
 
 const saved = computed(() => library.byId[props.card.id])
 const status = computed(
@@ -21,16 +23,6 @@ const meta = computed(() => {
   const length = type !== 'movies' && episodes ? `${episodes} eps` : ''
   return [kind, year, length].filter(Boolean).join(' · ')
 })
-
-function add() {
-  const { episodes, ...detail } = props.card
-  const item = seedItem(props.card.type, { ...detail, total_episodes: episodes }, [])
-  void library.act({
-    kind: 'status',
-    to: 'plantowatch',
-    item: { ...item, animeType: props.card.animeType },
-  })
-}
 </script>
 
 <template>
@@ -59,15 +51,20 @@ function add() {
 
     <!-- Until the library is loaded, "Add" could overwrite a saved status. -->
     <template v-if="library.isImported">
-      <span v-if="saved" class="row__status">{{ status }}</span>
+      <span v-if="saved && !isJustAdded" class="row__status">{{ status }}</span>
       <button
         v-else
         type="button"
         class="field"
-        :aria-label="`Add ${card.title} to your watchlist`"
-        @click="add"
+        :class="{ row__status: isJustAdded }"
+        :aria-label="
+          isJustAdded
+            ? `Remove ${card.title} from your watchlist`
+            : `Add ${card.title} to your watchlist`
+        "
+        @click="toggle"
       >
-        + Add
+        {{ isJustAdded ? '✓ Added' : '+ Add' }}
       </button>
     </template>
   </li>

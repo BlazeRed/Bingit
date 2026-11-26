@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import EpisodeList from './EpisodeList.vue'
@@ -18,6 +19,12 @@ const { detail, seasons, error, warnings, load } = useTitleDetail(type, id, {
   withPeople: false,
 })
 const { item: saved, isMovie, watched, act } = useTitleActions(type, id, detail, seasons)
+
+const facts = computed(() => {
+  const { year } = props.item
+  const { genres, runtime } = detail.value ?? {}
+  return [year, genres?.[0], runtime && `${runtime} min`].filter(Boolean).join(' · ')
+})
 </script>
 
 <template>
@@ -31,14 +38,21 @@ const { item: saved, isMovie, watched, act } = useTitleActions(type, id, detail,
       height="540"
     />
     <div class="panel__body">
-      <h2>{{ item.title }}</h2>
+      <div>
+        <h2>
+          <RouterLink :to="{ name: 'title', params: { type: routeType(type), id } }">
+            {{ item.title }}
+          </RouterLink>
+        </h2>
+        <p class="muted mono">{{ facts }}</p>
+      </div>
       <ErrorNote v-if="error" :message="error" @retry="load" />
       <p v-else-if="!detail" class="muted" role="status">Loading…</p>
 
       <template v-else>
         <div class="panel__actions">
           <StatusSelect :type="isMovie ? 'movies' : type" :status="saved?.status" @change="act" />
-          <span v-if="saved?.rating" class="mono">★ {{ saved.rating }}/10</span>
+          <span v-if="saved?.rating" class="panel__rating mono"> {{ saved.rating }}/10 </span>
           <button
             v-if="isMovie && saved?.status !== 'completed'"
             type="button"
@@ -47,16 +61,14 @@ const { item: saved, isMovie, watched, act } = useTitleActions(type, id, detail,
           >
             Mark watched
           </button>
+          <a class="panel__simkl" :href="simklPageUrl(item)" target="_blank" rel="noopener">
+            View on Simkl →
+          </a>
         </div>
-        <p class="panel__links">
-          <RouterLink :to="{ name: 'title', params: { type: routeType(type), id } }">
-            Full page
-          </RouterLink>
-          <a :href="simklPageUrl(item)" target="_blank" rel="noopener">View on Simkl →</a>
-        </p>
         <p v-for="warning in warnings" :key="warning" class="muted">{{ warning }}</p>
         <EpisodeList
           v-if="!isMovie && seasons.length"
+          compact
           :seasons="seasons"
           :watched="watched"
           @watch="(episodes) => act({ kind: 'watch', episodes })"
@@ -96,11 +108,28 @@ h2 {
   font-size: var(--text-lg);
 }
 
-.panel__actions,
-.panel__links {
+.panel__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
+}
+
+h2 a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.panel__rating {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-highlight);
+  color: var(--color-on-highlight);
+  font-size: var(--text-sm);
+}
+
+.panel__simkl {
+  margin-left: auto;
+  font-size: var(--text-sm);
 }
 </style>

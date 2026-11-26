@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { posterUrl } from '@/api/images'
 import { browse, TYPES } from '@/library/browse'
+import { timeAgo } from '@/me/format'
 import type { MediaType } from '@/library/item'
 import { useLibraryStore } from '@/stores/library'
 import { routeType } from '@/title/model'
@@ -35,7 +36,12 @@ const recent = computed(() =>
           <RouterLink :to="{ name: 'title', params: { type: routeType(item.type), id: item.id } }">
             {{ item.title }}
           </RouterLink>
-          <span class="muted">{{ TYPES[item.type] }}</span>
+          <span class="muted">
+            {{ TYPES[item.type] }}
+            <template v-if="item.addedAt">
+              · added {{ timeAgo(Date.parse(item.addedAt)) }}
+            </template>
+          </span>
         </span>
       </li>
     </ul>

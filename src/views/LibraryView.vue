@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { LayoutGrid, List, RefreshCw } from '@lucide/vue'
+import { LayoutGrid, List } from '@lucide/vue'
 
+import ErrorNote from '@/components/ErrorNote.vue'
 import LibraryEntry from '@/components/LibraryEntry.vue'
 import TitlePanel from '@/components/TitlePanel.vue'
 import {
@@ -61,12 +62,6 @@ const linkTo = (type: string, bucket?: Bucket) => ({
   name: 'library',
   params: { type, bucket },
 })
-
-const syncedAt = computed(
-  () =>
-    library.checkedAt &&
-    new Date(library.checkedAt).toLocaleTimeString('en', { timeStyle: 'short' }),
-)
 </script>
 
 <template>
@@ -74,19 +69,19 @@ const syncedAt = computed(
     <main class="library">
       <header class="library__header">
         <h1>Library</h1>
-        <button
-          type="button"
-          class="tool"
-          :disabled="library.isSyncing"
-          @click="library.sync(true)"
-        >
-          <RefreshCw :size="18" aria-hidden="true" />
-          {{ library.isSyncing ? 'Syncing…' : 'Sync now' }}
-        </button>
+        <nav class="library__secondary" aria-label="Other statuses">
+          <RouterLink
+            v-for="bucket in buckets.secondary"
+            :key="bucket"
+            :to="linkTo(selection.type, bucket)"
+            :aria-current="selection.bucket === bucket ? 'page' : undefined"
+          >
+            {{ BUCKETS[bucket].label }} {{ count(bucket) }}
+          </RouterLink>
+        </nav>
       </header>
-      <p v-if="syncedAt" class="muted">Last synced at {{ syncedAt }}</p>
 
-      <p v-if="library.error" class="error" role="alert">{{ library.error }}</p>
+      <ErrorNote v-if="library.error" :message="library.error" @retry="library.sync(true)" />
       <p v-if="library.pending.length" class="muted" role="status">
         {{ library.pending.length }} changes waiting to be sent to Simkl.
       </p>
@@ -104,10 +99,9 @@ const syncedAt = computed(
 
       <nav class="tabs" aria-label="Status">
         <RouterLink
-          v-for="bucket in [...buckets.primary, ...buckets.secondary]"
+          v-for="bucket in buckets.primary"
           :key="bucket"
           :to="linkTo(selection.type, bucket)"
-          :class="{ tabs__secondary: buckets.secondary.includes(bucket) }"
           :aria-current="selection.bucket === bucket ? 'page' : undefined"
         >
           {{ BUCKETS[bucket].label }} <span class="mono">{{ count(bucket) }}</span>
@@ -178,7 +172,31 @@ const syncedAt = computed(
 .library__header {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+}
+
+.library__secondary {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.library__secondary a {
+  display: inline-flex;
   align-items: center;
+  min-height: var(--tap-min);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.library__secondary a + a::before {
+  content: '·';
+  margin-right: var(--space-3);
+}
+
+.library__secondary a[aria-current] {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
 }
 
 h1 {
@@ -242,14 +260,6 @@ h1 {
   border-bottom-color: var(--color-action);
   color: var(--color-text);
   font-weight: var(--weight-semibold);
-}
-
-.tabs .tabs__secondary {
-  font-size: var(--text-sm);
-}
-
-.tabs a:not(.tabs__secondary) + .tabs__secondary {
-  margin-left: auto;
 }
 
 .tabs span {

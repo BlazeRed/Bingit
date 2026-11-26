@@ -12,7 +12,8 @@ import { TYPES } from '@/library/browse'
 import type { MediaType } from '@/library/item'
 import { simklPageUrl } from '@/library/item'
 import { useLibraryStore } from '@/stores/library'
-import { routeType, seedItem } from '@/title/model'
+import { useQuickAddList } from '@/composables/useQuickAdd'
+import { routeType } from '@/title/model'
 
 const SHOWN = 12
 
@@ -20,6 +21,7 @@ const SHOWN = 12
 const props = defineProps<{ isGuest?: boolean }>()
 
 const library = useLibraryStore()
+const quickAdd = useQuickAddList()
 const type = ref<MediaType>('tv')
 // Free file: no quota.
 const {
@@ -38,16 +40,6 @@ const linkTo = (card: Card) =>
         is: RouterLink,
         attrs: { to: { name: 'title', params: { type: routeType(card.type), id: card.id } } },
       }
-
-function add(card: Card) {
-  const { episodes, ...detail } = card
-  const item = seedItem(card.type, { ...detail, total_episodes: episodes }, [])
-  void library.act({
-    kind: 'status',
-    to: 'plantowatch',
-    item: { ...item, animeType: card.animeType },
-  })
-}
 </script>
 
 <template>
@@ -76,7 +68,10 @@ function add(card: Card) {
           <span class="top__rank mono">#{{ index + 1 }}</span>
           <!-- Until the library is loaded, "Add" could overwrite a saved status. -->
           <template v-if="library.isImported">
-            <span v-if="library.byId[card.id]" class="top__badge top__badge--saved">
+            <span
+              v-if="library.byId[card.id] && !quickAdd.isJustAdded(card)"
+              class="top__badge top__badge--saved"
+            >
               <Check :size="20" aria-hidden="true" />
               <span class="visually-hidden">In your library</span>
             </span>
@@ -84,10 +79,19 @@ function add(card: Card) {
               v-else
               type="button"
               class="top__badge"
-              :aria-label="`Add ${card.title} to your watchlist`"
-              @click="add(card)"
+              :class="{ 'top__badge--saved': quickAdd.isJustAdded(card) }"
+              :aria-label="
+                quickAdd.isJustAdded(card)
+                  ? `Remove ${card.title} from your watchlist`
+                  : `Add ${card.title} to your watchlist`
+              "
+              @click="quickAdd.toggle(card)"
             >
-              <Plus :size="20" aria-hidden="true" />
+              <component
+                :is="quickAdd.isJustAdded(card) ? Check : Plus"
+                :size="20"
+                aria-hidden="true"
+              />
             </button>
           </template>
         </div>

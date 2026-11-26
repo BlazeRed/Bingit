@@ -21,6 +21,7 @@ vi.mock('@/stores/library', () => ({
     isImported: true,
     items: [{ id: 1, status: 'watching' }],
     byId: {},
+    added: [],
   }),
 }))
 

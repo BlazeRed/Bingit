@@ -20,6 +20,8 @@ export const useLibraryStore = defineStore('library', () => {
   const record = shallowRef<LibraryRecord>()
   const pending = shallowRef<Op[]>([])
   const failures = shallowRef<Failure[]>([])
+  /** Titles added from a list in this session: their button offers Undo. */
+  const added = shallowRef<LibraryItem[]>([])
   const isSyncing = ref(false)
   const progress = ref('')
   const error = ref('')
@@ -116,6 +118,24 @@ export const useLibraryStore = defineStore('library', () => {
     scheduleSend()
   }
 
+  async function quickAdd(item: LibraryItem) {
+    added.value = [...added.value.filter((other) => other.id !== item.id), item]
+    await act({ kind: 'status', to: 'plantowatch', item })
+  }
+
+  /**
+   * Takes a quick add back. Removing also deletes history on Simkl, so only a
+   * title that still has none is removed.
+   */
+  async function undoAdd(id: number) {
+    const item = added.value.find((other) => other.id === id)
+    added.value = added.value.filter((other) => other.id !== id)
+    const saved = byId.value[id]
+    const isUntouched =
+      saved?.status === 'plantowatch' && !saved.watchedCount && saved.rating === null
+    if (item && isUntouched) await act({ kind: 'remove', item })
+  }
+
   /** Queues many changes at once (restore from a backup). */
   async function actAll(ops: Op[]) {
     await enqueueAll(ops)
@@ -147,6 +167,7 @@ export const useLibraryStore = defineStore('library', () => {
     record.value = undefined
     pending.value = []
     failures.value = []
+    added.value = []
     error.value = ''
   }
 
@@ -163,6 +184,9 @@ export const useLibraryStore = defineStore('library', () => {
     error,
     sync,
     send,
+    added,
+    quickAdd,
+    undoAdd,
     act,
     actAll,
     reimport,

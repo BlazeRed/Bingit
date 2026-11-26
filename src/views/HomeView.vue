@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { Search } from '@lucide/vue'
 
 import ContinueWatching from '@/components/ContinueWatching.vue'
 import ErrorNote from '@/components/ErrorNote.vue'
@@ -25,11 +23,6 @@ const summary = computed(() => {
 
 <template>
   <main v-if="auth.status === 'signedIn'" class="page home">
-    <RouterLink class="home__search" :to="{ name: 'search' }">
-      <Search :size="18" aria-hidden="true" />Search movies, TV, anime
-      <kbd>/</kbd>
-    </RouterLink>
-
     <header>
       <h1>Up next</h1>
       <p v-if="library.isImported" class="muted">{{ summary }}</p>
@@ -83,7 +76,6 @@ const summary = computed(() => {
   gap: var(--space-6);
 }
 
-.home__search,
 .home__recent {
   display: none;
 }
@@ -95,25 +87,6 @@ const summary = computed(() => {
 @media (min-width: 64rem) {
   .home {
     max-width: var(--content-max);
-  }
-
-  .home__search {
-    display: flex;
-    gap: var(--space-3);
-    align-items: center;
-    max-width: 32rem;
-    height: var(--control-h);
-    padding: 0 var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    color: var(--color-text-muted);
-    text-decoration: none;
-  }
-
-  .home__search kbd {
-    margin-left: auto;
-    font-size: var(--text-2xs);
   }
 
   .home__grid {

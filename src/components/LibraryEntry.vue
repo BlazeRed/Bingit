@@ -61,21 +61,30 @@ const meta = computed(() => {
 
       <span class="entry__body">
         <span class="entry__title">{{ item.title }}</span>
-        <span class="entry__meta mono">{{ meta }}</span>
+        <span class="entry__meta mono" :class="{ 'entry__facts--progress': hasProgress }">
+          {{ meta }}
+        </span>
       </span>
 
       <span v-if="hasProgress" class="entry__progress">
-        <span class="entry__meta mono">{{ item.watchedCount }}/{{ item.totalCount }}</span>
+        <span class="entry__meta mono">
+          <span v-if="item.nextToWatch" class="entry__narrow"> Next {{ item.nextToWatch }} · </span>
+          {{ item.watchedCount }}/{{ item.totalCount }}
+        </span>
         <span class="entry__track"><span :style="{ width: `${percent}%` }" /></span>
       </span>
 
       <span v-if="hasProgress && item.nextToWatch" class="entry__next mono">
-        <span class="entry__label">Next </span>{{ item.nextToWatch }}
+        {{ item.nextToWatch }}
       </span>
 
-      <span v-if="item.rating" class="entry__rating mono">
-        <span aria-hidden="true">★</span><span class="visually-hidden">Your rating:</span>
-        {{ item.rating }}
+      <span
+        v-if="item.rating"
+        class="entry__rating mono"
+        :class="{ 'entry__rating--progress': hasProgress }"
+      >
+        <span class="visually-hidden">Your rating:</span>
+        {{ item.rating }}/10
       </span>
     </RouterLink>
     <button
@@ -119,8 +128,7 @@ const meta = computed(() => {
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'poster body rating'
-    'poster progress rating'
-    'poster next rating';
+    'poster progress rating';
   column-gap: var(--space-3);
   align-content: center;
   align-items: center;
@@ -163,9 +171,15 @@ const meta = computed(() => {
 }
 
 .entry__next {
-  grid-area: next;
+  display: none;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+}
+
+/* Narrow rows in progress show next episode and count only. */
+.entry--list .entry__facts--progress,
+.entry--list .entry__rating--progress {
+  display: none;
 }
 
 .entry__track {
@@ -238,6 +252,7 @@ const meta = computed(() => {
   }
 
   .entry--list .entry__next {
+    display: block;
     grid-column: 3;
   }
 
@@ -245,8 +260,13 @@ const meta = computed(() => {
     grid-column: 4;
   }
 
-  .entry--list .entry__label {
+  .entry--list .entry__narrow {
     display: none;
+  }
+
+  .entry--list .entry__facts--progress,
+  .entry--list .entry__rating--progress {
+    display: revert;
   }
 
   .entry--list .entry__mark {

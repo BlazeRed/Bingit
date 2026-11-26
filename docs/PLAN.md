@@ -175,34 +175,40 @@ Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 3. **New this week**: next 7 days of the calendar ∩ library (dropped titles excluded), up to 5 rows with date, the first one highlighted. A row, or the "Calendar" link, opens the **calendar bottom sheet**: Movies / TV / Anime, "Only titles in my library" (on by default), days from today, 7 at a time; without the filter, the 15 most popular per day plus "Show all".
 4. **Most watched on Simkl this week**: Movies / TV / Anime, ranked posters with quick add to Watchlist, link "Discover more in Search". Trending files are free and don't use the daily quota.
 
-Desktop: search box link on top; two columns. Left: continue watching as 3 landscape cards, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
+Desktop: two columns. Left: continue watching as 3 landscape cards, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
 
 ### Search (`/search`)
 
 - Empty box → **discover**: category, list (trending today / week / month; top rated, new premieres, coming soon for TV and anime), genre; rows with quick add.
-- Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` focuses it from anywhere.
+- Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` or the desktop top bar focuses it from anywhere.
 
 ### Navigation
 
-Up next · Library · Search · Me. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts, counts, and the user with the last sync time.
+Up next · Library · Search · Me. On desktop, every page except Search has a search button in a top bar. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts, counts, and the user with the last sync time.
 
 ### Library on desktop
 
-The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, links, episodes); "Full page" opens the title page. Modified clicks and the grid layout behave as links.
+The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, rating, "View on Simkl", the current season); the panel's title opens the title page. Modified clicks behave as links.
 
 ### Me (`/me`)
 
 Profile, stats on demand, appearance (System / Light / Dark), sync (status, requests today, clear saved data), **your data** (export JSON or CSV, restore from Bingit JSON; not in the mock, added from §4), about, sign out.
 
+### Title page
+
+Full-width backdrop (brand gradient when there is none) with a back button, overlapping poster, facts and scores; status select beside the progress bar; overview, your rating, episodes with the next one highlighted, one-row cast, links.
+
+### Quick add
+
+"+ Add" becomes "✓ Added" for titles added in this session, with an "Undo" message. Undo removes the title only while it has no history or rating.
+
 ### Still different from the mocks
 
 | Screen | Mock | Now |
 |---|---|---|
-| Title page | Full-width backdrop with overlapping poster and back button, compact status + progress, next episode highlighted, single cast row | Rounded image, native status select, no highlight, cast grid |
-| Library | "Paused · Dropped" as a small link | Extra tabs |
-| Library side panel | Rating badge, one season line | Season buttons as on the title page |
-| Desktop | Search input in a top bar | Search link on Up next only |
-| Add to Watchlist | Toggle with Undo | Add only; remove from the title page |
+| Library | No filter, sort or grid controls | Kept: they are in §4 |
+| Status control | Custom button with chevron | Native select (same look, built-in keyboard and screen reader support) |
+| Me | No data section | "Your data": export and restore |
 | Me, About | — | TMDB logo not shown yet (their terms ask for it) |
 
 ## 9. Open items

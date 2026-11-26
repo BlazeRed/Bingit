@@ -33,15 +33,17 @@ h2 {
 }
 
 ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: var(--space-4) var(--space-3);
+  display: flex;
+  gap: var(--space-4);
   margin: 0;
-  padding: 0;
+  padding: 0 0 var(--space-2);
+  overflow-x: auto;
   list-style: none;
 }
 
 li {
+  flex: none;
+  width: 4.5rem;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
