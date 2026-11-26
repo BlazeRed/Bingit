@@ -1,2 +1,88 @@
 # Bingit
+
 Track it. Binge it. Sync it.
+
+Bingit is a free and open-source web app to track movies, TV shows and anime. It runs on top of your [Simkl](https://simkl.com) account: your watchlists, history and ratings stay on Simkl, and Bingit gives you a cleaner way to use them.
+
+> **Status:** early development. Nothing to use yet. See the [project plan](docs/PLAN.md).
+
+## Features (planned)
+
+- Sign in with your Simkl account. No new account, no extra password.
+- One library for movies, TV shows and anime, by status: watching, plan to watch, on hold, dropped, completed.
+- "Continue watching" with the next episode for every show.
+- Mark episodes, seasons and movies as watched. Rate titles.
+- Detail pages with cast, crew, trailers and where to watch (TMDB), and characters, voice actors and related works for anime (AniList).
+- Search, trending, top rated, premieres and an episode calendar.
+- Light and dark themes, keyboard friendly.
+
+## How it works
+
+Bingit is a static single-page app. It has no backend and stores no user data on its own servers.
+
+| Service | Used for |
+|---|---|
+| [Simkl API](https://api.simkl.org) | Sign-in (OAuth 2.0 + PKCE), library, history, ratings, catalog, trending, calendar |
+| [TMDB API](https://developer.themoviedb.org) | Cast, crew, people, artwork, videos, watch providers for movies and TV |
+| [AniList API](https://docs.anilist.co) | Characters, staff, relations and airing schedule for anime |
+
+Your Simkl tokens and a cache of your library are kept in your browser (localStorage and IndexedDB). Signing out removes them and revokes the token.
+
+## Tech stack
+
+Vue 3 · TypeScript · Vite · Reka UI · Pinia · vue-router · Vitest · ESLint + oxlint + Prettier · Netlify.
+
+Details and reasons: [docs/PLAN.md](docs/PLAN.md). Simkl API notes: [docs/simkl-api-research.md](docs/simkl-api-research.md).
+
+## Development
+
+### Requirements
+
+- Node.js 24 (see `.nvmrc`; with nvm run `nvm use`)
+- A Simkl app and a TMDB token (both free)
+
+### Set up API keys
+
+1. Create a Simkl app at <https://simkl.com/settings/developer/>.
+   - Auth version: **AUTH V2**
+   - Client type: **Mobile, desktop & browser apps** (no client secret)
+   - Redirect URI: `http://localhost:5173/callback`
+2. Get a TMDB API read access token at <https://www.themoviedb.org/settings/api>.
+3. Copy `.env.example` to `.env.local` and fill in both values.
+
+AniList needs no key.
+
+These values are public identifiers that end up in the browser bundle. They are not secrets. Never add a client secret to this project.
+
+### Commands
+
+```sh
+npm install          # install dependencies
+npm run dev          # start dev server on http://localhost:5173
+npm test             # run unit tests once
+npm run test:unit    # run unit tests in watch mode
+npm run type-check   # check types
+npm run lint         # lint and fix
+npm run format       # format with Prettier
+npm run build        # type-check and build to dist/
+npm run preview      # serve the production build
+```
+
+## Deployment
+
+The site deploys to Netlify from `main`. Build settings, the SPA fallback and the security headers are in [`netlify.toml`](netlify.toml). Set `VITE_SIMKL_CLIENT_ID` and `VITE_TMDB_TOKEN` in the Netlify environment, and add `https://<your-site>/callback` as a redirect URI in the Simkl app.
+
+Sign-in does not work on Netlify deploy previews, because Simkl accepts only registered redirect URIs.
+
+## Contributing
+
+Issues and pull requests are welcome. CI runs lint, format check, type-check, tests and a build on every pull request; run the same commands locally before you push.
+
+## Credits
+
+Movie, TV and anime data from [Simkl](https://simkl.com). Extra metadata from [TMDB](https://www.themoviedb.org) and [AniList](https://anilist.co).
+This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+## License
+
+[GPL-3.0](LICENSE) © Mauro Nonis and contributors.

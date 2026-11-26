@@ -1,0 +1,24 @@
+# Node version comes from .nvmrc.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback: let vue-router handle every path.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://wsrv.nl https://simkl.in https://image.tmdb.org https://s4.anilist.co; connect-src 'self' https://api.simkl.com https://data.simkl.in https://api.themoviedb.org https://graphql.anilist.co; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Vite emits content-hashed files here, safe to cache forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
