@@ -67,10 +67,9 @@ src/
 - Redirect URIs to register: `http://localhost/callback` (Simkl ignores the port for loopback addresses), `https://<site>.netlify.app/callback` (+ custom domain later). Deploy previews: login unsupported unless URL registered.
 
 ### Sync engine (quota is 500 req/day on Simkl Free)
-- On sign-in: snapshot `/sync/activities` → pull `/sync/all-items/{shows,movies,anime}` sequentially → store items + snapshot in IndexedDB.
-- On app start / tab focus (min interval ~5 min): 1 call to `/sync/activities`; if `all` unchanged → done. Else pull only moved buckets with `date_from`.
-- Deletions: periodic `extended=simkl_ids_only` diff (e.g. once a day).
-- Episode-level data (`extended=full`, `episode_watched_at=yes`) fetched lazily per show on detail page, not in bulk.
+- First import after sign-in, then deltas gated by `/sync/activities` (on app start, tab focus at most every ~5 min, and "Sync now"). Details: ARCHITECTURE.md §6.
+- Deletions: id-only diff when `removed_from_list` moves.
+- Watched episode numbers come with the sync (`extended=full`) except for completed and dropped titles.
 - Budget target: typical session < 20 user-data requests.
 
 ### Writes

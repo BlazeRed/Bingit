@@ -69,7 +69,14 @@ export const useAuthStore = defineStore('auth', () => {
     status.value = 'signedOut'
   }
 
-  return { status, userName, error, restore, signIn, completeSignIn, signOut }
+  /** The session ended outside this store (revoked or expired grant). */
+  function expire(message: string) {
+    userName.value = ''
+    error.value = message
+    status.value = 'signedOut'
+  }
+
+  return { status, userName, error, restore, signIn, completeSignIn, signOut, expire }
 })
 
 function messageOf(cause: unknown): string {

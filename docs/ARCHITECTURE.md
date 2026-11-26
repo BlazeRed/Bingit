@@ -81,10 +81,13 @@ Redirect URIs to register: `http://localhost/callback` (loopback: port ignored) 
 
 ## 6. Sync engine
 
-- **Initial**: snapshot `/sync/activities` → `/sync/all-items/shows?extended=full`, then `movies`, then `anime` (sequential) → write mirror → save snapshot. Show progress ("Importing your library…").
-- **Incremental**: on app start, tab focus (min 5 min apart), and after our own writes: `/sync/activities`; unchanged `all` → stop; else pull only changed types with `date_from`.
-- **Deletions**: once a day, `extended=simkl_ids_only` diff per type.
-- **Multi-tab**: Web Locks API (`navigator.locks.request('sync', …)`) so only one tab syncs; `BroadcastChannel` tells other tabs to reload the store. Both native, no library.
+Code: `src/sync/engine.ts`.
+
+- **Initial**: snapshot `/sync/activities` → `/sync/all-items/shows?extended=full`, then `movies`, then `anime` (sequential). Show progress ("Importing your TV shows…").
+- **Incremental**: on app start, tab focus (min 5 min apart), "Sync now", and (M3) after our own writes: `/sync/activities`; unchanged `all` → stop. Else, per moved timestamp: statuses → one `/sync/all-items?date_from=…&extended=full`; `rated_at` → `/sync/ratings?date_from=…` (rating changes are not in the item delta); `removed_from_list` → `/sync/all-items?extended=simkl_ids_only` and delete what is missing.
+- **Atomic save**: items and snapshot are one IndexedDB record, written only when every request succeeded. A schema `version` forces a re-import.
+- **Multi-tab**: Web Locks (`bingit-sync`) so one tab syncs at a time; `BroadcastChannel` tells other tabs to reload. Sign-in and sign-out take the same lock. Both native, no library.
+- **Episodes**: `extended=full` gives watched episode numbers for watching, plan to watch and on hold. Completed and dropped titles have none.
 
 ## 7. Write queue
 

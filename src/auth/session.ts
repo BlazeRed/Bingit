@@ -14,6 +14,8 @@ import { codeChallenge, randomToken } from './pkce'
 const SESSION_KEY = 'session'
 const PENDING_KEY = 'bingit-oauth'
 const LOCK_NAME = 'bingit-session'
+/** Held while the library is written, so sign-in and sign-out can't race a sync. */
+export const SYNC_LOCK = 'bingit-sync'
 const SCOPE = 'media:read media:write'
 const EXPIRY_MARGIN_MS = 5 * 60 * 1000
 
@@ -97,7 +99,11 @@ export async function completeSignIn(query: URLSearchParams): Promise<void> {
     code_verifier: pending.verifier,
     redirect_uri: redirectUri(),
   })
-  await set(SESSION_KEY, session)
+  await navigator.locks.request(SYNC_LOCK, async () => {
+    // Data left by an expired session may belong to another account.
+    await clear()
+    await set(SESSION_KEY, session)
+  })
 }
 
 export async function hasSession(): Promise<boolean> {
@@ -140,7 +146,7 @@ export async function clearSession(): Promise<void> {
 
 /** Revokes the grant and wipes all local data, even when revocation fails. */
 export async function signOut(): Promise<void> {
-  await navigator.locks.request(LOCK_NAME, async () => {
+  const revokeAndWipe = async () => {
     const session = await get<Session>(SESSION_KEY)
     if (session) {
       await fetch(simklUrl('/oauth2/revoke'), {
@@ -152,5 +158,7 @@ export async function signOut(): Promise<void> {
       }).catch(() => undefined)
     }
     await clear()
-  })
+  }
+  // Same lock order as a sync: library first, then session.
+  await navigator.locks.request(SYNC_LOCK, () => navigator.locks.request(LOCK_NAME, revokeAndWipe))
 }
