@@ -125,7 +125,7 @@ Code: `src/sync/write-queue.ts`, `src/library/ops.ts`.
 - **Write queue, tokens, prefs:** a few KB.
 - Call `navigator.storage.persist()` after sign-in so Chrome/Firefox don't evict data under disk pressure.
 - **Safari:** deletes all site storage after 7 days without a visit unless the site is installed to the home screen. Effect: re-login + re-import after a week away. Mitigation: suggest "Add to Home Screen" (PWA, M6).
-- **Me page:** show usage from `navigator.storage.estimate()` and a "Clear cached data" button (keeps sign-in and library; "Clear saved data" removes everything).
+- **Me page:** shows usage from `navigator.storage.estimate()`. "Clear saved data" deletes the library mirror and the response cache, then imports again; sign-in and unsent changes stay. Sign out removes everything.
 
 ## 9. Search
 
@@ -135,9 +135,10 @@ Other discovery costs: trending, genre and calendar files are free. Top rated an
 
 ## 10. Errors and limits in the UI
 
-- 429 on GET → wait and retry; 429 on POST → queue backs off.
-- Quota: read `X-RateLimit-*` headers, show usage on Me; under 10% left → pause background sync, keep user actions.
-- Offline → banner, reads from mirror, writes queued.
+- Failed loads show a plain message and "Try again". A failed sync retries on the next trigger. A 429 on a write makes the queue wait.
+- Quota: `X-RateLimit-*` headers are saved and shown on Me; the reset is midnight US Eastern. Under 10% left, background sync checks pause; user actions and "Sync now" continue.
+- Offline → banner, reads from the mirror, writes queued.
+- Accessibility: skip link, focus moves to the content on page change, page titles, checked with axe-core (WCAG 2.1 AA) in both themes.
 
 ## 11. Types
 
@@ -152,9 +153,9 @@ Other discovery costs: trending, genre and calendar files are free. Top rated an
 
 ## 13. Import / export
 
-Simkl has no "download my data" or "upload a file" endpoint, and Bingit has no backend. Both features run in the browser:
+Simkl has no "download my data" or "upload a file" endpoint, and Bingit has no backend. Both features run in the browser (`src/backup/`).
 
-- **Export:** build a file from the library mirror and download it with a `Blob` + `<a download>`. For a complete backup, first refresh with `extended=full&include_all_episodes=yes&episode_watched_at=yes` (3 requests, one per type). Formats: Bingit JSON (lossless: all ids, statuses, ratings, per-episode dates) and CSV (one row per title, for spreadsheets).
-- **Import:** parse the file locally → preview (counts, unmatched rows) → send through the write queue in batches: `/sync/add-to-list` for watchlist/status, `/sync/history` with `watched_at` for watch events, `/sync/ratings` for ratings. Simkl resolves imdb/tmdb/tvdb/mal/anilist ids server-side and reports `not_found`. Import never deletes anything.
-- **Scope:** v1 (M5) = export JSON + CSV, restore from Bingit JSON. M6 = importers for IMDb CSV, Letterboxd CSV (title + year only, fuzzy), Trakt JSON, MAL XML.
-- **Cost:** ~1 request per 100 items, sent at ≤1 POST/s.
+- **Export:** reads the library from Simkl with `extended=full&include_all_episodes=yes&episode_watched_at=yes` (3 requests, one per type) and downloads it. Bingit JSON: ids, status, rating and date, per-episode watch dates. CSV: one row per title; cells that a spreadsheet would run as a formula are escaped.
+- **Restore:** the file is validated field by field → preview with counts → changes go through the write queue: history first (`/sync/history` with `watched_at`), then status (`/sync/add-to-list`), then ratings. About one request per 100 titles for each. Restore never removes anything.
+- **Limits:** a very large library can exceed Simkl's `max_items` on export. Restore keeps only Simkl ids.
+- **M6:** importers for IMDb CSV, Letterboxd CSV (title + year only, fuzzy), Trakt JSON, MAL XML.

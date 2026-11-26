@@ -1,10 +1,12 @@
 import { getAccessToken, SignedOutError, clearSession } from '@/auth/session'
 import { ApiError, readJson } from './http'
+import { recordQuota } from './quota'
 import { simklUrl } from './simkl-url'
 import type {
   SimklActivities,
   SimklAllItems,
   SimklItemsKey,
+  SimklStats,
   SimklUserSettings,
 } from './simkl-types'
 
@@ -48,6 +50,7 @@ export async function simklUser<T>(path: string, request: UserRequest = {}): Pro
   const token = await getAccessToken()
   let response = await send(token)
   if (response.status === 401) response = await send(await getAccessToken(token))
+  recordQuota(response.headers)
 
   try {
     return await readJson<T>(response)
@@ -68,3 +71,6 @@ export const getAllItems = (query: Record<string, string>, type?: SimklItemsKey)
 
 export const getRatings = (query: Record<string, string>) =>
   simklUser<SimklAllItems>('/sync/ratings', { query })
+
+/** Expensive for Simkl: only on an explicit user action. */
+export const getUserStats = (userId: number) => simklUser<SimklStats>(`/users/${userId}/stats`)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 import { CalendarDays } from '@lucide/vue'
 
@@ -14,7 +15,11 @@ const MAX_ROWS = 5
 const emit = defineEmits<{ count: [episodes: number] }>()
 
 const library = useLibraryStore()
-const { data: files, error } = useAsync(
+const {
+  data: files,
+  error,
+  retry,
+} = useAsync(
   () => true,
   () => Promise.all([getCalendar('tv'), getCalendar('anime')]),
 )
@@ -60,7 +65,7 @@ function open(type: MediaType) {
       </button>
     </div>
 
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="!files || !library.isImported" class="muted" role="status">Loading…</p>
     <p v-else-if="!airings.length" class="muted">
       No new episodes from your library in the next 7 days.

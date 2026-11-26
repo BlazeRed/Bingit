@@ -2,7 +2,7 @@
  * Two-phase Simkl sync: one full import, then deltas gated by /sync/activities.
  * https://api.simkl.org/guides/sync
  */
-import { get, set } from 'idb-keyval'
+import { del, get, set } from 'idb-keyval'
 
 import { getActivities, getAllItems, getRatings } from '@/api/simkl'
 import type { SimklActivities, SimklAllItems, SimklItemsKey } from '@/api/simkl-types'
@@ -35,6 +35,11 @@ const STATUSES = ['watching', 'plantowatch', 'hold', 'completed', 'dropped'] as 
 export async function readLibrary(): Promise<LibraryRecord | undefined> {
   const record = await get<LibraryRecord>(LIBRARY_KEY)
   return record?.version === VERSION ? record : undefined
+}
+
+/** Forgets the saved library, so that the next sync imports it again. */
+export function deleteLibrary() {
+  return navigator.locks.request(SYNC_LOCK, () => del(LIBRARY_KEY))
 }
 
 /** Changes the saved items, without racing a sync. No-op before the first import. */

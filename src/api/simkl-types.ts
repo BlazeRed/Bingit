@@ -41,6 +41,7 @@ interface SimklMedia {
 export interface SimklEntry {
   status: SimklStatus
   user_rating: number | null
+  user_rated_at?: string | null
   added_to_watchlist_at: string | null
   last_watched_at: string | null
   next_to_watch?: string | null
@@ -52,8 +53,22 @@ export interface SimklEntry {
   show?: SimklMedia
   movie?: SimklMedia
   /** Only with `extended=full`, and not for completed or dropped titles. */
-  seasons?: { number: number; episodes: { number: number }[] }[]
+  /** `watched_at` only with `episode_watched_at=yes`. */
+  seasons?: { number: number; episodes: { number: number; watched_at?: string | null }[] }[]
 }
 
 /** Empty results come back as `{}` or `null`. */
 export type SimklAllItems = Partial<Record<SimklItemsKey, SimklEntry[]>> | null
+
+interface SimklCount {
+  count?: number
+  watched_episodes_count?: number
+}
+
+export interface SimklStats {
+  total_mins?: number
+  movies?: Partial<Record<SimklStatus, SimklCount>>
+  tv?: Partial<Record<SimklStatus, SimklCount>>
+  anime?: Partial<Record<SimklStatus, SimklCount>>
+  watched_last_week?: { total_mins?: number }
+}

@@ -8,6 +8,7 @@
 import { clear, del, get, set } from 'idb-keyval'
 
 import { ApiError, readJson } from '@/api/http'
+import { clearQuota } from '@/api/quota'
 import { simklUrl } from '@/api/simkl-url'
 import { codeChallenge, randomToken } from './pkce'
 
@@ -158,6 +159,7 @@ export async function signOut(): Promise<void> {
       }).catch(() => undefined)
     }
     await clear()
+    clearQuota()
   }
   // Same lock order as a sync: library first, then session.
   await navigator.locks.request(SYNC_LOCK, () => navigator.locks.request(LOCK_NAME, revokeAndWipe))

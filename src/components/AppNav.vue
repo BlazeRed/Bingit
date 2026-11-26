@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
-import { Bookmark, LibraryBig, Search } from '@lucide/vue'
+import { Bookmark, LibraryBig, Search, User } from '@lucide/vue'
 
 import { parseSelection, TYPES } from '@/library/browse'
+import { initials, timeAgo } from '@/me/format'
+import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 
 const route = useRoute()
 const library = useLibraryStore()
+const auth = useAuthStore()
 
 const total = (type: string) => library.items.filter((item) => item.type === type).length
 const isCurrentType = (type: string) =>
@@ -25,6 +28,9 @@ const isCurrentType = (type: string) =>
     <RouterLink class="nav__link" :to="{ name: 'search' }">
       <Search :size="22" aria-hidden="true" />Search
     </RouterLink>
+    <RouterLink class="nav__link" :to="{ name: 'me' }">
+      <User :size="22" aria-hidden="true" />Me
+    </RouterLink>
 
     <div class="nav__shortcuts">
       <RouterLink
@@ -37,6 +43,16 @@ const isCurrentType = (type: string) =>
         {{ label }} <span class="mono">{{ total(type) }}</span>
       </RouterLink>
     </div>
+
+    <RouterLink v-if="auth.userName" class="nav__user" :to="{ name: 'me' }">
+      <span class="avatar" aria-hidden="true">{{ initials(auth.userName) }}</span>
+      <span>
+        {{ auth.userName }}
+        <span v-if="library.checkedAt" class="nav__synced mono">
+          Synced {{ timeAgo(library.checkedAt) }}
+        </span>
+      </span>
+    </RouterLink>
   </nav>
 </template>
 
@@ -54,7 +70,8 @@ const isCurrentType = (type: string) =>
 }
 
 .nav__brand,
-.nav__shortcuts {
+.nav__shortcuts,
+.nav__user {
   display: none;
 }
 
@@ -127,6 +144,25 @@ const isCurrentType = (type: string) =>
     color: var(--color-text);
     font-size: var(--text-sm);
     text-decoration: none;
+  }
+
+  .nav__user {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    margin-top: auto;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+
+  .nav__synced {
+    display: block;
+    font-size: var(--text-2xs);
+    color: var(--color-text-muted);
   }
 
   .nav__shortcut--current {

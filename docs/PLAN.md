@@ -109,7 +109,7 @@ netlify/functions/  tmdb proxy
 
 | Route | Content | State |
 |---|---|---|
-| `/` (signed out) | Landing: what it is, sign in with Simkl, trending on Simkl | sign-in button only; rest M5 |
+| `/` (signed out) | Landing: what it is, sign in with Simkl, most watched on Simkl (titles open on simkl.com) | built |
 | `/` (signed in) | Up next: continue watching, new this week (opens the calendar bottom sheet), most watched on Simkl this week. Layout: §8 | built |
 | `/library/:type?/:bucket?` | Library by type × bucket, sort, grid/list, title filter, mark next episode | built |
 | `/movie/:id`, `/tv/:id`, `/anime/:id` | Title page: art, info, ratings, status, your rating, mark watched, seasons/episodes, cast (TMDB) or characters/staff/relations (AniList), trailers, similar, "View on Simkl" | built; no watch providers yet |
@@ -117,8 +117,9 @@ netlify/functions/  tmdb proxy
 | `/person/:tmdbId` | TMDB person + roles; a role opens the Simkl title | built |
 | `/staff/:anilistId` | AniList staff / voice actor + roles; a role opens the Simkl title | built |
 | `/find/:source/:id` | Hidden step: turns a TMDB or AniList id into the Simkl title page | built |
-| `/me` | Profile, stats on demand, theme, sync status + quota, export (JSON, CSV), restore from Bingit JSON, clear local data, about, sign out | M5 |
+| `/me` | Profile, stats on demand, theme, sync status + quota, export (JSON, CSV), restore from Bingit JSON, clear local data, about, sign out | built |
 | `/callback` | OAuth return | built |
+| any other | Page not found | built |
 
 There is no separate Discover, Calendar or Stats page: discover lives in Search, the calendar is a sheet on Up next, stats are part of Me.
 
@@ -183,17 +184,26 @@ Desktop: search box link on top; two columns. Left: continue watching as 3 lands
 
 ### Navigation
 
-Up next · Library · Search (Me joins in M5). Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts and counts.
+Up next · Library · Search · Me. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts, counts, and the user with the last sync time.
+
+### Library on desktop
+
+The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, links, episodes); "Full page" opens the title page. Modified clicks and the grid layout behave as links.
+
+### Me (`/me`)
+
+Profile, stats on demand, appearance (System / Light / Dark), sync (status, requests today, clear saved data), **your data** (export JSON or CSV, restore from Bingit JSON; not in the mock, added from §4), about, sign out.
 
 ### Still different from the mocks
 
 | Screen | Mock | Now |
 |---|---|---|
 | Title page | Full-width backdrop with overlapping poster and back button, compact status + progress, next episode highlighted, single cast row | Rounded image, native status select, no highlight, cast grid |
-| Library | "Paused · Dropped" as a small link; desktop table + detail side panel | Extra tabs; list on all sizes (side panel: M5) |
-| Desktop | Search input in a top bar; user and sync status in the sidebar | Search link on Up next only; neither in the sidebar |
+| Library | "Paused · Dropped" as a small link | Extra tabs |
+| Library side panel | Rating badge, one season line | Season buttons as on the title page |
+| Desktop | Search input in a top bar | Search link on Up next only |
 | Add to Watchlist | Toggle with Undo | Add only; remove from the title page |
-| Sign out | On Me | At the bottom of Up next until M5 |
+| Me, About | — | TMDB logo not shown yet (their terms ask for it) |
 
 ## 9. Open items
 

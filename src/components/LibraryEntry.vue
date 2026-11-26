@@ -8,7 +8,11 @@ import { parseEpisodeCode, type Episodes } from '@/library/episodes'
 import type { LibraryItem } from '@/library/item'
 import { routeType } from '@/title/model'
 
-const props = defineProps<{ item: LibraryItem; layout: 'list' | 'grid' }>()
+const props = defineProps<{
+  item: LibraryItem
+  layout: 'list' | 'grid'
+  selected?: boolean
+}>()
 const emit = defineEmits<{ watch: [item: LibraryItem, episodes: Episodes] }>()
 
 const next = computed(() => {
@@ -34,10 +38,15 @@ const meta = computed(() => {
 </script>
 
 <template>
-  <li class="entry" :class="`entry--${layout}`">
+  <li
+    class="entry"
+    :class="[`entry--${layout}`, { 'entry--selected': selected }]"
+    :data-id="item.id"
+  >
     <RouterLink
       class="entry__link"
       :to="{ name: 'title', params: { type: routeType(item.type), id: item.id } }"
+      :aria-current="selected ? 'true' : undefined"
     >
       <img
         v-if="poster"
@@ -53,13 +62,15 @@ const meta = computed(() => {
       <span class="entry__body">
         <span class="entry__title">{{ item.title }}</span>
         <span class="entry__meta mono">{{ meta }}</span>
-        <template v-if="hasProgress">
-          <span class="entry__meta mono">
-            <template v-if="item.nextToWatch">Next {{ item.nextToWatch }} · </template>
-            {{ item.watchedCount }}/{{ item.totalCount }}
-          </span>
-          <span class="entry__track"><span :style="{ width: `${percent}%` }" /></span>
-        </template>
+      </span>
+
+      <span v-if="hasProgress" class="entry__progress">
+        <span class="entry__meta mono">{{ item.watchedCount }}/{{ item.totalCount }}</span>
+        <span class="entry__track"><span :style="{ width: `${percent}%` }" /></span>
+      </span>
+
+      <span v-if="hasProgress && item.nextToWatch" class="entry__next mono">
+        <span class="entry__label">Next </span>{{ item.nextToWatch }}
       </span>
 
       <span v-if="item.rating" class="entry__rating mono">
@@ -103,17 +114,23 @@ const meta = computed(() => {
 }
 
 .entry__link {
-  display: flex;
+  display: grid;
   flex: 1;
-  min-width: 0;
-  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'poster body rating'
+    'poster progress rating'
+    'poster next rating';
+  column-gap: var(--space-3);
+  align-content: center;
   align-items: center;
+  min-width: 0;
   color: var(--color-text);
   text-decoration: none;
 }
 
 .entry__poster {
-  flex: none;
+  grid-area: poster;
   width: var(--poster-list-w);
   height: auto;
   aspect-ratio: 2 / 3;
@@ -124,7 +141,7 @@ const meta = computed(() => {
 
 .entry__body {
   display: flex;
-  flex: 1;
+  grid-area: body;
   flex-direction: column;
   min-width: 0;
 }
@@ -139,9 +156,21 @@ const meta = computed(() => {
   color: var(--color-text-muted);
 }
 
+.entry__progress {
+  display: flex;
+  grid-area: progress;
+  flex-direction: column;
+}
+
+.entry__next {
+  grid-area: next;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 .entry__track {
   height: 3px;
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   overflow: hidden;
   background: var(--color-track);
 }
@@ -153,6 +182,8 @@ const meta = computed(() => {
 }
 
 .entry__rating {
+  grid-area: rating;
+  justify-self: start;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   background: var(--color-highlight);
@@ -171,6 +202,62 @@ const meta = computed(() => {
   border-top: 1px solid var(--color-border-subtle);
 }
 
+.entry--selected {
+  background: var(--color-wash);
+}
+
+/* A table when the list is wide enough. */
+@container (min-width: 38rem) {
+  .entry--list .entry__link {
+    grid-template-columns: var(--table-columns);
+    grid-template-areas: none;
+  }
+
+  .entry--list .entry__link > * {
+    grid-area: auto;
+    grid-row: 1;
+  }
+
+  .entry--list .entry__link {
+    /* Poster and title share the first column. */
+    position: relative;
+  }
+
+  .entry--list .entry__poster {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .entry--list .entry__body {
+    grid-column: 1;
+    padding-left: calc(var(--poster-list-w) + var(--space-3));
+  }
+
+  .entry--list .entry__progress {
+    grid-column: 2;
+  }
+
+  .entry--list .entry__next {
+    grid-column: 3;
+  }
+
+  .entry--list .entry__rating {
+    grid-column: 4;
+  }
+
+  .entry--list .entry__label {
+    display: none;
+  }
+
+  .entry--list .entry__mark {
+    width: var(--table-action);
+  }
+
+  .entry--list:not(:has(.entry__mark)) {
+    padding-right: calc(var(--space-4) + var(--space-3) + var(--table-action));
+  }
+}
+
 .entry--grid {
   display: flex;
   flex-direction: column;
@@ -179,10 +266,11 @@ const meta = computed(() => {
 }
 
 .entry--grid .entry__link {
+  display: flex;
   flex: none;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .entry--grid .entry__poster {

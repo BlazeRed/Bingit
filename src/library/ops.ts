@@ -14,7 +14,13 @@ export type Change =
    * Without `episodes`: the whole title (a movie). `next` is the code of the
    * following episode, when the caller knows the episode list.
    */
-  | { kind: 'watch'; episodes?: Episodes; next?: string }
+  | {
+      kind: 'watch'
+      episodes?: Episodes
+      next?: string
+      /** Watch time per `season:episode`, when it differs from `at` (restore). */
+      times?: Record<string, string>
+    }
   | { kind: 'unwatch'; episodes: Episodes }
   | { kind: 'rate'; rating: number | null }
 

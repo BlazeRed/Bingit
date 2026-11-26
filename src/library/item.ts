@@ -58,6 +58,6 @@ export function toLibraryItem(key: SimklItemsKey, entry: SimklEntry): LibraryIte
   }
 }
 
-export function simklPageUrl(item: LibraryItem): string {
+export function simklPageUrl(item: Pick<LibraryItem, 'type' | 'id' | 'ids'>): string {
   return `https://simkl.com/${item.type}/${item.id}/${item.ids.slug ?? ''}`
 }

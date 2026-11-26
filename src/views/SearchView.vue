@@ -7,6 +7,7 @@ import { SignedOutError } from '@/auth/session'
 import DiscoverPanel from '@/components/DiscoverPanel.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import TitleRow from '@/components/TitleRow.vue'
+import { messageOf } from '@/lib/errors'
 import { useAuthStore } from '@/stores/auth'
 
 const DEBOUNCE_MS = 400
@@ -47,7 +48,7 @@ async function search(text: string) {
   } catch (cause) {
     if (controller.signal.aborted) return
     if (cause instanceof SignedOutError) auth.expire(cause.message)
-    else error.value = cause instanceof Error ? cause.message : 'Search failed.'
+    else error.value = messageOf(cause)
   }
   isSearching.value = false
 }

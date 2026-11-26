@@ -9,11 +9,12 @@ import {
   type Person,
   type SimklDetail,
 } from '@/api/catalog'
+import { messageOf } from '@/lib/errors'
 import type { MediaType } from '@/library/item'
 import { toSeasons, type Season } from './model'
 
 /** Loads one title. Each source fails on its own, so one outage hides one section. */
-export function useTitleDetail(type: MediaType, id: number) {
+export function useTitleDetail(type: MediaType, id: number, { withPeople = true } = {}) {
   const detail = shallowRef<SimklDetail>()
   const seasons = shallowRef<Season[]>([])
   const cast = shallowRef<Person[]>([])
@@ -46,16 +47,20 @@ export function useTitleDetail(type: MediaType, id: number) {
     )
   }
 
-  onMounted(async () => {
+  async function load() {
+    error.value = ''
+    warnings.value = []
     try {
       // Episodes first: the page needs both to offer actions.
       const [loaded] = await Promise.all([getDetail(type, id), loadEpisodes()])
       detail.value = loaded
-      await loadExtras(loaded)
+      if (withPeople) await loadExtras(loaded)
     } catch (cause) {
-      error.value = cause instanceof Error ? cause.message : 'Could not load this title.'
+      error.value = messageOf(cause)
     }
-  })
+  }
 
-  return { detail, seasons, cast, anime, error, warnings }
+  onMounted(load)
+
+  return { detail, seasons, cast, anime, error, warnings, load }
 }

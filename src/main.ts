@@ -8,7 +8,10 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { pruneCache } from './db/cache'
+import { applyTheme, readTheme } from './lib/theme'
 import { useAuthStore } from './stores/auth'
+
+applyTheme(readTheme())
 
 const app = createApp(App)
 

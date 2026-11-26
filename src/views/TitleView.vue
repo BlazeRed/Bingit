@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import EpisodeList from '@/components/EpisodeList.vue'
 import PeopleList from '@/components/PeopleList.vue'
 import RatingPicker from '@/components/RatingPicker.vue'
+import StatusSelect from '@/components/StatusSelect.vue'
+import ErrorNote from '@/components/ErrorNote.vue'
 import { fanartUrl, posterUrl } from '@/api/images'
-import type { SimklStatus } from '@/api/simkl-types'
-import { BUCKETS, bucketsFor } from '@/library/browse'
-import type { Episodes } from '@/library/episodes'
 import { simklPageUrl } from '@/library/item'
-import type { Change } from '@/library/ops'
 import { useLibraryStore } from '@/stores/library'
-import { airedEpisodes, ROUTE_TYPES, routeType, seedItem } from '@/title/model'
+import { ROUTE_TYPES, routeType } from '@/title/model'
+import { useTitleActions } from '@/title/useTitleActions'
 import { useTitleDetail } from '@/title/useTitleDetail'
 
 // App.vue keys this view by path, so the params never change under it.
@@ -21,46 +20,18 @@ const type = ROUTE_TYPES[routeType(String(route.params.type))]
 const id = Number(route.params.id)
 
 const library = useLibraryStore()
-const { detail, seasons, cast, anime, error, warnings } = useTitleDetail(type, id)
+const { detail, seasons, cast, anime, error, warnings, load } = useTitleDetail(type, id)
 
-const item = computed(() => library.byId[id])
-const subject = computed(
-  () => item.value ?? (detail.value && seedItem(type, detail.value, seasons.value)),
-)
-const isMovie = computed(
-  () => type === 'movies' || (detail.value?.anime_type ?? item.value?.animeType) === 'movie',
-)
-
-const aired = computed(() => airedEpisodes(seasons.value))
-/** A completed title has no episode list: all aired episodes count as watched. */
-const watched = computed<Episodes>(
-  () => item.value?.seasons ?? (item.value?.status === 'completed' ? aired.value : {}),
-)
-const isHistoryUnknown = computed(
-  () => item.value && !item.value.seasons && item.value.status === 'dropped',
+const { item, subject, isMovie, watched, isHistoryUnknown, act } = useTitleActions(
+  type,
+  id,
+  detail,
+  seasons,
 )
 
-const statuses = computed(() => {
-  const { primary, secondary } = bucketsFor(isMovie.value ? 'movies' : type)
-  return [...primary, ...secondary].map((bucket) => BUCKETS[bucket])
+watch(detail, (loaded) => {
+  if (loaded) document.title = `${loaded.title} · Bingit`
 })
-
-function act(change: Change) {
-  if (!subject.value) return
-  const baseline = item.value?.status === 'completed' ? aired.value : undefined
-  void library.act({ ...change, item: subject.value, baseline })
-}
-
-function changeStatus(event: Event) {
-  const select = event.target as HTMLSelectElement
-  if (select.value !== 'remove') {
-    act({ kind: 'status', to: select.value as SimklStatus })
-  } else if (confirm('Remove this title? Simkl also deletes its watch history and rating.')) {
-    act({ kind: 'remove' })
-  } else {
-    select.value = item.value?.status ?? ''
-  }
-}
 
 const facts = computed(() => {
   const d = detail.value
@@ -97,7 +68,7 @@ const nextAiring = computed(() => {
 
 <template>
   <main class="title">
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <ErrorNote v-if="error" :message="error" @retry="load" />
     <p v-else-if="!detail || !subject" role="status">Loading…</p>
 
     <template v-else>
@@ -130,11 +101,7 @@ const nextAiring = computed(() => {
       </header>
 
       <div class="title__actions">
-        <select :value="item?.status ?? ''" aria-label="Library status" @change="changeStatus">
-          <option value="" disabled>Add to library…</option>
-          <option v-for="s in statuses" :key="s.status" :value="s.status">{{ s.label }}</option>
-          <option v-if="item" value="remove">Remove from library</option>
-        </select>
+        <StatusSelect :type="isMovie ? 'movies' : type" :status="item?.status" @change="act" />
         <button
           v-if="isMovie && item?.status !== 'completed'"
           type="button"
@@ -300,16 +267,6 @@ h2 {
   flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
-}
-
-select {
-  min-height: var(--tap-min);
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-wash);
-  color: var(--color-on-wash);
-  font-weight: var(--weight-semibold);
 }
 
 .links {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import AppNav from '@/components/AppNav.vue'
@@ -36,8 +36,23 @@ function syncOnReturn() {
 }
 
 function sendWhenOnline() {
+  trackOnline()
   if (auth.status === 'signedIn') void library.send()
 }
+
+const isOnline = ref(navigator.onLine)
+const trackOnline = () => (isOnline.value = navigator.onLine)
+
+// Keyboard and screen reader users start at the new page, not on the old link.
+const content = useTemplateRef('content')
+watch(
+  () => route.name,
+  async (_name, previous) => {
+    if (previous === undefined) return
+    await nextTick()
+    content.value?.focus({ preventScroll: true })
+  },
+)
 
 /** `/` jumps to search, unless the user is typing. */
 async function openSearch(event: KeyboardEvent) {
@@ -54,24 +69,33 @@ onMounted(() => {
   window.addEventListener('keydown', openSearch)
   document.addEventListener('visibilitychange', syncOnReturn)
   window.addEventListener('online', sendWhenOnline)
+  window.addEventListener('offline', trackOnline)
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', openSearch)
   document.removeEventListener('visibilitychange', syncOnReturn)
   window.removeEventListener('online', sendWhenOnline)
+  window.removeEventListener('offline', trackOnline)
 })
 </script>
 
 <template>
+  <a class="skip" href="#content" @click.prevent="content?.focus()">Skip to content</a>
   <AppNav v-if="auth.status === 'signedIn'" />
 
   <WriteFailures v-if="auth.status === 'signedIn'" />
 
   <div :class="{ shell: auth.status === 'signedIn' }">
-    <!-- Detail pages are rebuilt per title or person; other views keep their state. -->
-    <RouterView v-slot="{ Component }">
-      <component :is="Component" :key="route.meta.perPath ? route.path : route.name" />
-    </RouterView>
+    <p v-if="!isOnline" class="offline" role="status">
+      You are offline. Changes are saved and sent later.
+    </p>
+
+    <div id="content" ref="content" tabindex="-1">
+      <!-- Detail pages are rebuilt per title or person; other views keep their state. -->
+      <RouterView v-slot="{ Component }">
+        <component :is="Component" :key="route.meta.perPath ? route.path : route.name" />
+      </RouterView>
+    </div>
 
     <!-- Attribution required by Simkl, TMDB and AniList terms. See docs/simkl-api-research.md -->
     <footer class="attribution">
@@ -83,6 +107,32 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 5;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+.skip:not(:focus) {
+  transform: translateY(-200%);
+}
+
+#content:focus {
+  outline: none;
+}
+
+.offline {
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-highlight);
+  color: var(--color-on-highlight);
+  font-size: var(--text-sm);
+}
+
 .shell {
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
 }

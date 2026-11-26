@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 
 import { getCalendar } from '@/api/discover'
@@ -29,7 +30,7 @@ watch([type, isMineOnly], () => {
 const airingsOf = (day: Day) =>
   expanded.value.has(day.date.toDateString()) ? day.airings : mostPopular(day.airings, PER_DAY)
 
-const { data: file, error, isLoading } = useAsync(type, getCalendar)
+const { data: file, error, isLoading, retry } = useAsync(() => type.value, getCalendar)
 
 const mine = computed(() => followedIds(library.items))
 
@@ -53,7 +54,7 @@ const time = (date: Date) => date.toLocaleTimeString('en', { timeStyle: 'short' 
       Only titles in my library
     </label>
 
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
     <p v-else-if="!days.length" class="muted">Nothing scheduled in the coming weeks.</p>
 

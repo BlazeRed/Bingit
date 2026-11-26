@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorNote from './ErrorNote.vue'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Check, Plus } from '@lucide/vue'
@@ -9,15 +10,34 @@ import SegmentedControl from './SegmentedControl.vue'
 import { useAsync } from '@/composables/useAsync'
 import { TYPES } from '@/library/browse'
 import type { MediaType } from '@/library/item'
+import { simklPageUrl } from '@/library/item'
 import { useLibraryStore } from '@/stores/library'
 import { routeType, seedItem } from '@/title/model'
 
 const SHOWN = 12
 
+/** Signed out: titles open on Simkl, and nothing can be added. */
+const props = defineProps<{ isGuest?: boolean }>()
+
 const library = useLibraryStore()
 const type = ref<MediaType>('tv')
 // Free file: no quota.
-const { data: cards, error } = useAsync(type, (value) => getTrending(value, 'week'))
+const {
+  data: cards,
+  error,
+  retry,
+} = useAsync(
+  () => type.value,
+  (value) => getTrending(value, 'week'),
+)
+
+const linkTo = (card: Card) =>
+  props.isGuest
+    ? { is: 'a', attrs: { href: simklPageUrl(card), target: '_blank', rel: 'noopener' } }
+    : {
+        is: RouterLink,
+        attrs: { to: { name: 'title', params: { type: routeType(card.type), id: card.id } } },
+      }
 
 function add(card: Card) {
   const { episodes, ...detail } = card
@@ -37,12 +57,12 @@ function add(card: Card) {
       <SegmentedControl v-model="type" :options="TYPES" label="Category" />
     </div>
 
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="!cards" class="muted" role="status">Loading…</p>
     <ol v-else>
       <li v-for="(card, index) in cards.slice(0, SHOWN)" :key="card.id">
         <div class="top__art">
-          <RouterLink :to="{ name: 'title', params: { type: routeType(card.type), id: card.id } }">
+          <component :is="linkTo(card).is" v-bind="linkTo(card).attrs">
             <img
               v-if="card.poster"
               :src="posterUrl(card.poster, '_ca')"
@@ -52,7 +72,7 @@ function add(card: Card) {
               loading="lazy"
             />
             <span v-else class="visually-hidden">{{ card.title }}</span>
-          </RouterLink>
+          </component>
           <span class="top__rank mono">#{{ index + 1 }}</span>
           <!-- Until the library is loaded, "Add" could overwrite a saved status. -->
           <template v-if="library.isImported">
@@ -76,7 +96,7 @@ function add(card: Card) {
       </li>
     </ol>
 
-    <p>
+    <p v-if="!isGuest">
       <RouterLink :to="{ name: 'search' }">Discover more in Search →</RouterLink>
     </p>
   </section>

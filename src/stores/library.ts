@@ -2,11 +2,14 @@ import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 
 import { ApiError } from '@/api/http'
+import { isQuotaLow } from '@/api/quota'
 import { SignedOutError } from '@/auth/session'
+import { clearCache } from '@/db/cache'
 import type { LibraryItem } from '@/library/item'
 import { applyOps, type Change, type Op } from '@/library/ops'
-import { readLibrary, syncLibrary, type LibraryRecord } from '@/sync/engine'
-import { enqueue, flushQueue, readQueue, type Failure } from '@/sync/write-queue'
+import { messageOf } from '@/lib/errors'
+import { deleteLibrary, readLibrary, syncLibrary, type LibraryRecord } from '@/sync/engine'
+import { enqueue, enqueueAll, flushQueue, readQueue, type Failure } from '@/sync/write-queue'
 import { useAuthStore } from './auth'
 
 /** Wait for more taps before sending, so they share one request. */
@@ -46,7 +49,7 @@ export const useLibraryStore = defineStore('library', () => {
 
   function fail(cause: unknown) {
     if (cause instanceof SignedOutError) useAuthStore().expire(cause.message)
-    else error.value = cause instanceof Error ? cause.message : 'Sync failed.'
+    else error.value = messageOf(cause)
   }
 
   let syncAgain = false
@@ -62,6 +65,8 @@ export const useLibraryStore = defineStore('library', () => {
     try {
       // Show the saved library first, also when offline.
       await load()
+      // Near the daily limit, keep the remaining requests for the user's actions.
+      if (!force && record.value && isQuotaLow()) return
       const before = record.value?.checkedAt
       const synced = await syncLibrary(force, (message) => (progress.value = message))
       record.value = synced
@@ -111,6 +116,21 @@ export const useLibraryStore = defineStore('library', () => {
     scheduleSend()
   }
 
+  /** Queues many changes at once (restore from a backup). */
+  async function actAll(ops: Op[]) {
+    await enqueueAll(ops)
+    await reloadAndNotify()
+    scheduleSend(0)
+  }
+
+  /** Throws away the local copy and imports it again. Unsent changes stay. */
+  async function reimport() {
+    await deleteLibrary()
+    await clearCache()
+    record.value = undefined
+    await sync(true)
+  }
+
   async function retry(failure: Failure) {
     dismiss(failure)
     for (const op of failure.ops) await enqueue(op)
@@ -144,6 +164,8 @@ export const useLibraryStore = defineStore('library', () => {
     sync,
     send,
     act,
+    actAll,
+    reimport,
     retry,
     dismiss,
     reset,

@@ -1,19 +1,21 @@
-import { readonly, ref, shallowRef, watch, type WatchSource } from 'vue'
+import { readonly, ref, shallowRef, watch } from 'vue'
 
 import { SignedOutError } from '@/auth/session'
+import { messageOf } from '@/lib/errors'
 import { useAuthStore } from '@/stores/auth'
 
 /** Runs `load` whenever `source` changes. A late answer never replaces a newer one. */
-export function useAsync<S, T>(source: WatchSource<S>, load: (value: S) => Promise<T>) {
+export function useAsync<S, T>(source: () => S, load: (value: S) => Promise<T>) {
   const data = shallowRef<T>()
   const error = ref('')
   const isLoading = ref(false)
   const auth = useAuthStore()
   let latest = 0
+  const attempt = ref(0)
 
   watch(
-    source,
-    async (value) => {
+    [source, attempt],
+    async ([value]) => {
       const run = ++latest
       isLoading.value = true
       error.value = ''
@@ -23,9 +25,7 @@ export function useAsync<S, T>(source: WatchSource<S>, load: (value: S) => Promi
         if (run === latest) data.value = result
       } catch (cause) {
         if (cause instanceof SignedOutError) auth.expire(cause.message)
-        else if (run === latest) {
-          error.value = cause instanceof Error ? cause.message : 'Could not load this page.'
-        }
+        else if (run === latest) error.value = messageOf(cause)
       } finally {
         if (run === latest) isLoading.value = false
       }
@@ -33,5 +33,7 @@ export function useAsync<S, T>(source: WatchSource<S>, load: (value: S) => Promi
     { immediate: true },
   )
 
-  return { data, error: readonly(error), isLoading: readonly(isLoading) }
+  const retry = () => void attempt.value++
+
+  return { data, error: readonly(error), isLoading: readonly(isLoading), retry }
 }

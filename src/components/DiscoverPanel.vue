@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 
 import { getBrowse, getGenreTrending, getGenres, getTrending } from '@/api/discover'
@@ -37,18 +38,22 @@ watch(type, (value) => {
 })
 watch([type, list, genre], () => (shown.value = PAGE))
 
-const { data: genres } = useAsync(type, getGenres)
+const { data: genres } = useAsync(() => type.value, getGenres)
 
 const selection = computed(() => `${type.value}|${list.value}|${genre.value}`)
 const {
   data: cards,
   error,
   isLoading,
-} = useAsync(selection, () => {
-  if (genre.value) return getGenreTrending(type.value, genre.value)
-  if (!isBrowse(list.value)) return getTrending(type.value, list.value)
-  return getBrowse(type.value === 'anime' ? 'anime' : 'tv', list.value)
-})
+  retry,
+} = useAsync(
+  () => selection.value,
+  () => {
+    if (genre.value) return getGenreTrending(type.value, genre.value)
+    if (!isBrowse(list.value)) return getTrending(type.value, list.value)
+    return getBrowse(type.value === 'anime' ? 'anime' : 'tv', list.value)
+  },
+)
 
 const heading = computed(() => {
   if (genre.value) {
@@ -86,7 +91,7 @@ const MOST_WATCHED = {
     </div>
 
     <h2>{{ heading }}</h2>
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
     <p v-else-if="!cards?.length" class="muted">Nothing here right now.</p>
     <template v-else>

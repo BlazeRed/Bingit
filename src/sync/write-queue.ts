@@ -27,15 +27,18 @@ export const readQueue = async () => (await get<Op[]>(QUEUE_KEY)) ?? []
 const editQueue = (edit: (queue: Op[]) => Op[]) =>
   navigator.locks.request(QUEUE_LOCK, async () => set(QUEUE_KEY, edit(await readQueue())))
 
-export function enqueue(op: Op): Promise<void> {
-  // An empty episode list must never be sent: Simkl reads it as "the whole show",
-  // and removing a whole show deletes it from the library.
-  const isEmpty =
-    (op.kind === 'watch' || op.kind === 'unwatch') &&
-    op.episodes !== undefined &&
-    countEpisodes(op.episodes) === 0
-  return isEmpty ? Promise.resolve() : editQueue((queue) => [...queue, op])
+// An empty episode list must never be sent: Simkl reads it as "the whole show",
+// and removing a whole show deletes it from the library.
+const isEmpty = (op: Op) =>
+  (op.kind === 'watch' || op.kind === 'unwatch') &&
+  op.episodes !== undefined &&
+  countEpisodes(op.episodes) === 0
+
+export function enqueueAll(ops: Op[]): Promise<void> {
+  return editQueue((queue) => [...queue, ...ops.filter((op) => !isEmpty(op))])
 }
+
+export const enqueue = (op: Op) => enqueueAll([op])
 
 function endpointOf(op: Op): string {
   switch (op.kind) {
@@ -62,7 +65,10 @@ function toEntry(op: Op): Entry {
   const episodes = op.kind === 'watch' || op.kind === 'unwatch' ? op.episodes : undefined
   const times: Entry['times'] = {}
   for (const [season, numbers] of Object.entries(episodes ?? {})) {
-    for (const number of numbers) times[`${season}:${number}`] = op.at
+    for (const number of numbers) {
+      const key = `${season}:${number}`
+      times[key] = (op.kind === 'watch' && op.times?.[key]) || op.at
+    }
   }
   return { op, episodes, times }
 }

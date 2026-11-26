@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { Search } from '@lucide/vue'
 
 import ContinueWatching from '@/components/ContinueWatching.vue'
+import ErrorNote from '@/components/ErrorNote.vue'
 import MostWatched from '@/components/MostWatched.vue'
 import NewThisWeek from '@/components/NewThisWeek.vue'
 import RecentlyAdded from '@/components/RecentlyAdded.vue'
@@ -20,12 +21,6 @@ const summary = computed(() => {
   const word = newEpisodes.value === 1 ? 'episode' : 'episodes'
   return `${count} in progress · ${newEpisodes.value} new ${word} this week`
 })
-
-function signOut() {
-  const unsent = library.pending.length
-  const question = `${unsent} changes are not sent to Simkl yet. Sign out and lose them?`
-  if (!unsent || confirm(question)) void auth.signOut()
-}
 </script>
 
 <template>
@@ -51,18 +46,16 @@ function signOut() {
       </div>
       <MostWatched class="home__top" />
     </div>
-
-    <!-- Moves to the Me page in M5. -->
-    <p class="muted">
-      <template v-if="auth.userName">Signed in as {{ auth.userName }}. </template>
-      <button type="button" class="home__signout" @click="signOut">Sign out</button>
-    </p>
   </main>
 
-  <main v-else class="page">
+  <main v-else class="page guest">
     <h1>Bingit</h1>
     <p>Track it. Binge it. Sync it.</p>
-    <p v-if="auth.error" class="error" role="alert">{{ auth.error }}</p>
+    <p class="muted">
+      A free, open-source tracker for movies, TV shows and anime. Your watchlist, history and
+      ratings stay in your Simkl account.
+    </p>
+    <ErrorNote v-if="auth.error" :message="auth.error" @retry="auth.signIn" />
     <button
       v-if="auth.status === 'signedOut'"
       type="button"
@@ -71,6 +64,7 @@ function signOut() {
     >
       Sign in with Simkl
     </button>
+    <MostWatched v-if="auth.status === 'signedOut'" is-guest />
   </main>
 </template>
 
@@ -94,14 +88,8 @@ function signOut() {
   display: none;
 }
 
-.home__signout {
-  min-height: var(--tap-min);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-link);
-  text-decoration: underline;
-  cursor: pointer;
+.guest {
+  max-width: var(--content-max);
 }
 
 @media (min-width: 64rem) {
