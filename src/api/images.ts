@@ -4,3 +4,8 @@ type PosterSize = '_cm' | '_ca'
 export function posterUrl(path: string, size: PosterSize): string {
   return `https://wsrv.nl/?url=https://simkl.in/posters/${path}${size}.webp&q=90`
 }
+
+/** 960×540 backdrop. */
+export function fanartUrl(path: string): string {
+  return `https://wsrv.nl/?url=https://simkl.in/fanart/${path}_mobile.webp&q=90`
+}

@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import { Check } from '@lucide/vue'
 
 import { posterUrl } from '@/api/images'
-import { simklPageUrl, type LibraryItem } from '@/library/item'
+import { parseEpisodeCode, type Episodes } from '@/library/episodes'
+import type { LibraryItem } from '@/library/item'
+import { routeType } from '@/title/model'
 
 const props = defineProps<{ item: LibraryItem; layout: 'list' | 'grid' }>()
+const emit = defineEmits<{ watch: [item: LibraryItem, episodes: Episodes] }>()
+
+const next = computed(() => {
+  const { status, nextToWatch } = props.item
+  if (status !== 'watching' || !nextToWatch) return null
+  const episodes = parseEpisodeCode(nextToWatch)
+  return episodes && { code: nextToWatch, short: nextToWatch.replace(/^S\d+/, ''), episodes }
+})
 
 const poster = computed(
   () => props.item.poster && posterUrl(props.item.poster, props.layout === 'grid' ? '_ca' : '_cm'),
@@ -23,7 +35,10 @@ const meta = computed(() => {
 
 <template>
   <li class="entry" :class="`entry--${layout}`">
-    <a class="entry__link" :href="simklPageUrl(item)" target="_blank" rel="noopener">
+    <RouterLink
+      class="entry__link"
+      :to="{ name: 'title', params: { type: routeType(item.type), id: item.id } }"
+    >
       <img
         v-if="poster"
         class="entry__poster"
@@ -51,7 +66,16 @@ const meta = computed(() => {
         <span aria-hidden="true">★</span><span class="visually-hidden">Your rating:</span>
         {{ item.rating }}
       </span>
-    </a>
+    </RouterLink>
+    <button
+      v-if="next"
+      type="button"
+      class="entry__mark"
+      :aria-label="`Mark ${next.code} of ${item.title} watched`"
+      @click="emit('watch', item, next.episodes)"
+    >
+      <Check :size="16" aria-hidden="true" />{{ next.short }}
+    </button>
   </li>
 </template>
 
@@ -62,8 +86,26 @@ const meta = computed(() => {
   contain-intrinsic-size: auto 90px;
 }
 
+.entry__mark {
+  display: inline-flex;
+  flex: none;
+  gap: var(--space-1);
+  justify-content: center;
+  align-items: center;
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
 .entry__link {
   display: flex;
+  flex: 1;
+  min-width: 0;
   gap: var(--space-3);
   align-items: center;
   color: var(--color-text);
@@ -118,7 +160,10 @@ const meta = computed(() => {
   font-size: var(--text-sm);
 }
 
-.entry--list .entry__link {
+.entry--list {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
   padding: var(--space-3) var(--space-4);
 }
 
@@ -127,10 +172,14 @@ const meta = computed(() => {
 }
 
 .entry--grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   contain-intrinsic-size: auto 240px;
 }
 
 .entry--grid .entry__link {
+  flex: none;
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-2);

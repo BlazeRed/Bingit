@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import AppNav from '@/components/AppNav.vue'
+import WriteFailures from '@/components/WriteFailures.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 
@@ -14,7 +15,8 @@ const router = useRouter()
 watch(
   () => auth.status,
   (status) => {
-    if (status === 'signedIn') void library.sync()
+    // Changes saved while offline go out before the first check.
+    if (status === 'signedIn') void library.sync().then(library.send)
     if (status === 'signedOut') library.reset()
   },
   { immediate: true },
@@ -33,15 +35,30 @@ function syncOnReturn() {
   if (document.visibilityState === 'visible' && auth.status === 'signedIn') void library.sync()
 }
 
-onMounted(() => document.addEventListener('visibilitychange', syncOnReturn))
-onUnmounted(() => document.removeEventListener('visibilitychange', syncOnReturn))
+function sendWhenOnline() {
+  if (auth.status === 'signedIn') void library.send()
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', syncOnReturn)
+  window.addEventListener('online', sendWhenOnline)
+})
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', syncOnReturn)
+  window.removeEventListener('online', sendWhenOnline)
+})
 </script>
 
 <template>
   <AppNav v-if="auth.status === 'signedIn'" />
 
+  <WriteFailures v-if="auth.status === 'signedIn'" />
+
   <div :class="{ shell: auth.status === 'signedIn' }">
-    <RouterView />
+    <!-- A title page is rebuilt per title; other views keep their state. -->
+    <RouterView v-slot="{ Component }">
+      <component :is="Component" :key="route.name === 'title' ? route.path : route.name" />
+    </RouterView>
 
     <!-- Attribution required by Simkl, TMDB and AniList terms. See docs/simkl-api-research.md -->
     <footer class="attribution">

@@ -37,6 +37,14 @@ export async function readLibrary(): Promise<LibraryRecord | undefined> {
   return record?.version === VERSION ? record : undefined
 }
 
+/** Changes the saved items, without racing a sync. No-op before the first import. */
+export function updateLibrary(change: (items: LibraryRecord['items']) => LibraryRecord['items']) {
+  return navigator.locks.request(SYNC_LOCK, async () => {
+    const record = await readLibrary()
+    if (record) await set(LIBRARY_KEY, { ...record, items: change(record.items) })
+  })
+}
+
 /**
  * Brings the local mirror up to date. Without `force`, does nothing if the last
  * check is recent. Saves only when every request succeeded.

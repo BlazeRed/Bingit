@@ -35,6 +35,7 @@ const items = [
 ]
 
 vi.mock('idb-keyval', () => ({ get: async () => undefined }))
+vi.mock('@/api/simkl', () => ({}))
 vi.mock('@/sync/engine', () => ({
   readLibrary: async () => undefined,
   syncLibrary: async () => ({ items: { ...items }, checkedAt: Date.now() }),
@@ -44,7 +45,10 @@ async function mountAt(path: string) {
   vi.stubGlobal('navigator', { locks: fakeLocks() })
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/library/:type?/:bucket?', name: 'library', component: LibraryView }],
+    routes: [
+      { path: '/library/:type?/:bucket?', name: 'library', component: LibraryView },
+      { path: '/:type/:id', name: 'title', component: LibraryView },
+    ],
   })
   await router.push(path)
   const pinia = createPinia()

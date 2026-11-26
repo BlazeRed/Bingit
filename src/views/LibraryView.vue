@@ -60,6 +60,9 @@ const syncedAt = computed(
     <p v-if="syncedAt" class="muted">Last synced at {{ syncedAt }}</p>
 
     <p v-if="library.error" class="error" role="alert">{{ library.error }}</p>
+    <p v-if="library.pending.length" class="muted" role="status">
+      {{ library.pending.length }} changes waiting to be sent to Simkl.
+    </p>
 
     <nav class="segmented" aria-label="Category">
       <RouterLink
@@ -108,7 +111,13 @@ const syncedAt = computed(
       {{ library.progress || (library.isSyncing ? 'Loading your library…' : 'No library yet.') }}
     </p>
     <ul v-else-if="visible.length" :class="layout">
-      <LibraryEntry v-for="item in visible" :key="item.id" :item="item" :layout="layout" />
+      <LibraryEntry
+        v-for="item in visible"
+        :key="item.id"
+        :item="item"
+        :layout="layout"
+        @watch="(title, episodes) => library.act({ kind: 'watch', episodes, item: title })"
+      />
     </ul>
     <p v-else class="muted">
       {{ search ? 'No title matches your filter.' : 'Nothing here yet.' }}

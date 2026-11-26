@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
+import { useLibraryStore } from '@/stores/library'
 
 const auth = useAuthStore()
+const library = useLibraryStore()
+
+function signOut() {
+  const unsent = library.pending.length
+  const question = `${unsent} changes are not sent to Simkl yet. Sign out and lose them?`
+  if (!unsent || confirm(question)) void auth.signOut()
+}
 </script>
 
 <template>
@@ -13,7 +21,7 @@ const auth = useAuthStore()
 
     <template v-if="auth.status === 'signedIn'">
       <p v-if="auth.userName">Signed in as {{ auth.userName }}.</p>
-      <button type="button" class="button" @click="auth.signOut">Sign out</button>
+      <button type="button" class="button" @click="signOut">Sign out</button>
     </template>
     <button
       v-else-if="auth.status === 'signedOut'"

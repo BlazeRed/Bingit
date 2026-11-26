@@ -145,7 +145,7 @@ Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only w
 | M2 | Sync + Library | Initial + delta sync into IndexedDB; Library view |
 | M3 | Detail + actions | Detail pages, write queue, status/rating/episode toggles |
 | M4 | Discover | Search, Discover, Calendar, Person |
-| M5 | Home + polish | Up next, Me (stats, settings, export + restore), a11y pass, empty/error states |
+| M5 | Home + polish | Up next, Me (stats, settings, export + restore), desktop Library side panel, a11y pass, empty/error states |
 | M6 | Extras | PWA, PRO features, importers (IMDb, Letterboxd, Trakt, MAL), e2e tests |
 
 ## 8. Design decisions (in progress)

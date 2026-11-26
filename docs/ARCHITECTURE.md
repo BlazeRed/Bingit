@@ -91,19 +91,24 @@ Code: `src/sync/engine.ts`.
 
 ## 7. Write queue
 
-- Every action updates the store first (optimistic), then enqueues.
-- Queue merges pending ops per endpoint into one array body, sends ≤1 POST/s, retries 429/5xx with backoff (`Retry-After` when present).
-- Hard failure → roll back that item + toast with Retry.
-- **Offline writes (decided):** the queue is persisted in IndexedDB. Marks made offline are sent when `online` fires or on next start, oldest first; items show a small "pending" state until sent.
+Code: `src/sync/write-queue.ts`, `src/library/ops.ts`.
+
+- A user action is stored as a change in IndexedDB. The UI shows the saved library with all pending changes applied on top (optimistic). Applying a change twice gives the same result.
+- The queue sends changes in order. The leading changes for one endpoint become one body (episodes of one show are joined). ≤1 POST/s, one sender at a time (Web Lock). Taps within 1.5 s share a request.
+- Success → the change is written into the saved library, removed from the queue, then a delta sync fetches what Simkl made of it.
+- Network errors, 429, 5xx, 401, 412 → keep and retry with backoff (`Retry-After` when present). Any other error or `not_found` → drop the change (that rolls it back) and show a message with Retry.
+- **Offline writes (decided):** marks made offline are sent when `online` fires or on next start, oldest first; the title page shows "Waiting to send". Sign-out warns before it discards unsent changes. If a session expires, the next sign-in discards them.
+- An empty episode list is never sent: Simkl reads it as "the whole show".
+- Completed titles have no synced episode list: all aired episodes count as watched. Dropped titles show no episode history.
 
 ## 8. Caching (IndexedDB)
 
 | Data | TTL | Why |
 |---|---|---|
 | Library mirror + snapshot | until next delta | source of truth for UI |
-| Simkl catalog details / episodes | 7 days | free but avoids latency |
+| Simkl catalog details / episodes | 6 hours | free; episode lists change when episodes air |
 | Trending / calendar JSON | browser HTTP cache (`no-cache` revalidate) | Simkl's own guidance |
-| TMDB / AniList responses | 7 days | stable data, AniList limit |
+| TMDB / AniList responses | 7 days (AniList 6 hours: next airing episode) | stable data, AniList limit |
 | Search results | memory only, session | cheap to redo, no stale results |
 
 ### Storage limits

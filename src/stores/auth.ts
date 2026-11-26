@@ -5,6 +5,7 @@ import { get, set } from 'idb-keyval'
 import { getUserSettings } from '@/api/simkl'
 import type { SimklUserSettings } from '@/api/simkl-types'
 import * as session from '@/auth/session'
+import { clearCache } from '@/db/cache'
 
 const USER_KEY = 'user'
 
@@ -64,6 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function signOut() {
     await session.signOut()
+    await clearCache()
     userName.value = ''
     error.value = ''
     status.value = 'signedOut'
