@@ -15,7 +15,14 @@ const title = (
   first_aired: string,
   relations: SimklRelation[],
   anime_type = 'tv',
-): SimklDetail => ({ title: `Title ${id}`, ids: { simkl: id }, first_aired, anime_type, relations })
+  tvdb = '1',
+): SimklDetail => ({
+  title: `Title ${id}`,
+  ids: { simkl: id, tvdb },
+  first_aired,
+  anime_type,
+  relations,
+})
 
 /** The shape of Ranma: an old series and its remake, with false distant "sequels". */
 const catalog = [
@@ -33,7 +40,11 @@ const catalog = [
   // A film sits between two seasons of the remake.
   title(4, '2025-10', [link(3, 'season 1'), link(5, 'sequel'), link(2, 'sequel', false)]),
   title(5, '2026-01', [link(4, 'prequel'), link(6, 'sequel')], 'movie'),
-  title(6, '2026-10', [link(5, 'prequel')]),
+  title(6, '2026-10', [link(5, 'prequel'), link(3, 'season 1'), link(7, 'sequel')]),
+  // A crossover: a direct "sequel" that is another show.
+  title(7, '2008-04', [link(6, 'prequel'), link(8, 'sequel')]),
+  // Its announced next season: no TVDB id and no "season 1" link yet.
+  title(8, '', [link(7, 'prequel')], 'tv', ''),
 ]
 const load = async (id: number) => catalog[id - 1]!
 const ids = async (from: number) => (await animeSeasons(await load(from), load)).map((s) => s.id)
@@ -47,6 +58,12 @@ describe('animeSeasons', () => {
   it('gives the same list from every season, also across a film', async () => {
     expect(await ids(3)).toEqual([3, 4, 6])
     expect(await ids(6)).toEqual([3, 4, 6])
+  })
+
+  it('leaves out another show, but keeps an announced season', async () => {
+    expect(await ids(6)).not.toContain(7)
+    expect(await ids(7)).toEqual([7, 8])
+    expect(await ids(8)).toEqual([7, 8])
   })
 
   it('is empty for a single season and for a film', async () => {

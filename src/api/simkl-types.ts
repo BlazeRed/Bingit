@@ -26,6 +26,7 @@ export interface SimklIds {
   slug?: string
   imdb?: string
   tmdb?: string
+  tvdb?: string
   anilist?: string
   mal?: string
 }

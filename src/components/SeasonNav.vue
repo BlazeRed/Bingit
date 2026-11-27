@@ -74,6 +74,9 @@ onMounted(() =>
 <!-- Not scoped: Reka and the router render these elements. -->
 <style>
 .seasons {
+  /* Keeps the hidden "seen" texts in the row. Without it, those of the cards
+     out of view widen the page, and the navigation bar with it. */
+  position: relative;
   display: flex;
   gap: var(--space-2);
   margin: 0 calc(-1 * var(--space-5));

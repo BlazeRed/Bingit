@@ -219,7 +219,7 @@ Status changes live in a bottom sheet with a separate "Remove from library" butt
 
 **Season row.** TV shows and anime use the same row and place. A TV season changes the episode list on the same page (status and rating belong to the whole show; the bar shows the season and the total). An anime season opens its own title.
 
-**Anime seasons.** Simkl keeps each season as its own title. Its distant `relations` are not reliable (remakes show as sequels), so the app walks the direct `season`, `prequel` and `sequel` links title by title (free requests, cached; also through films and specials), shows the TV and ONA titles it finds, ordered by first air date. Checked against AniList on 13 series. Status, progress and rating belong to the chosen season. Films and specials go to Related.
+**Anime seasons.** Simkl keeps each season as its own title. Its distant `relations` are not reliable (remakes show as sequels), so the app walks the direct `season`, `prequel` and `sequel` links title by title (free requests, cached; also through films and specials), shows the TV and ONA titles of the same show, ordered by first air date. Crossovers and spin-offs are also direct sequels (Fire Force leads to Soul Eater), so a title belongs to the show of its `season 1` link; an announced title with no TVDB and TMDB id goes with its neighbour. Series with their own first season (Naruto and Shippuden, Dragon Ball and Z) stay apart. Checked against AniList on 19 series. Status, progress and rating belong to the chosen season. Films and specials go to Related.
 
 ### Quick add
 

@@ -94,6 +94,25 @@ const neighbours = (detail: SimklDetail) =>
 
 const isSeries = (detail: SimklDetail) => detail.anime_type === 'tv' || detail.anime_type === 'ona'
 
+const isUnmapped = (detail: SimklDetail) => !detail.ids.tvdb && !detail.ids.tmdb
+
+/**
+ * The first season of the show a title belongs to: crossovers and spin-offs are
+ * also direct "sequels", but only real seasons carry a "season 1" link. An
+ * announced season has no TVDB or TMDB id yet and no such link: it goes with its
+ * neighbour.
+ */
+function showOf(detail: SimklDetail, found: Map<number, SimklDetail>): number {
+  const first = (d: SimklDetail) =>
+    d.relations?.find((r) => r.relation_type.startsWith('season'))?.ids.simkl
+  const known = isUnmapped(detail)
+    ? neighbours(detail)
+        .map((id) => found.get(id))
+        .find((d) => d && !isUnmapped(d))
+    : undefined
+  return first(detail) ?? (known && first(known)) ?? (known ?? detail).ids.simkl
+}
+
 /**
  * The seasons of an anime, oldest first. Simkl keeps each season as its own title.
  * Only direct links are trustworthy (distant "sequels" include remakes), so this
@@ -115,10 +134,11 @@ export async function animeSeasons(
     edge.forEach((next, index) => found.set(ids[index]!, next))
   }
 
+  const show = showOf(detail, found)
   // Unannounced dates go last.
   const aired = (d: SimklDetail) => d.first_aired || '9999'
   const seasons = [...found]
-    .filter(([, d]) => isSeries(d))
+    .filter(([, d]) => isSeries(d) && showOf(d, found) === show)
     .sort(([, a], [, b]) => aired(a).localeCompare(aired(b)))
     .map(([id, d]) => ({ id, year: d.year ?? null }))
   return seasons.length > 1 ? seasons : []
