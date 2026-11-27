@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ExternalLink } from '@lucide/vue'
-import { computed } from 'vue'
+import { ChevronDown, ExternalLink, Plus } from '@lucide/vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import EpisodeList from './EpisodeList.vue'
 import ErrorNote from './ErrorNote.vue'
-import StatusSelect from './StatusSelect.vue'
+import LibraryStatusSheet from './LibraryStatusSheet.vue'
 import { fanartUrl } from '@/api/images'
+import { BUCKETS } from '@/library/browse'
 import { simklPageUrl, type LibraryItem } from '@/library/item'
 import { routeType } from '@/title/model'
 import { useTitleActions } from '@/title/useTitleActions'
@@ -20,6 +21,11 @@ const { detail, seasons, error, warnings, load } = useTitleDetail(type, id, {
   withPeople: false,
 })
 const { item: saved, isMovie, watched, act } = useTitleActions(type, id, detail, seasons)
+
+const isStatusOpen = ref(false)
+const statusLabel = computed(
+  () => Object.values(BUCKETS).find((b) => b.status === saved.value?.status)?.label,
+)
 
 const facts = computed(() => {
   const { year } = props.item
@@ -52,7 +58,32 @@ const facts = computed(() => {
 
       <template v-else>
         <div class="panel__actions">
-          <StatusSelect :type="isMovie ? 'movies' : type" :status="saved?.status" @change="act" />
+          <button
+            v-if="saved"
+            type="button"
+            class="status-badge"
+            aria-haspopup="dialog"
+            :aria-label="`Status: ${statusLabel}. Change`"
+            @click="isStatusOpen = true"
+          >
+            {{ statusLabel }}<ChevronDown :size="16" aria-hidden="true" />
+          </button>
+          <button
+            v-else
+            type="button"
+            class="button"
+            @click="act({ kind: 'status', to: 'plantowatch' })"
+          >
+            <Plus :size="16" aria-hidden="true" /> Add to Watchlist
+          </button>
+          <LibraryStatusSheet
+            v-if="saved"
+            v-model:open="isStatusOpen"
+            :type="isMovie ? 'movies' : type"
+            :status="saved.status"
+            :title="saved.title"
+            @change="act"
+          />
           <span v-if="saved?.rating" class="panel__rating mono"> {{ saved.rating }}/10 </span>
           <button
             v-if="isMovie && saved?.status !== 'completed'"

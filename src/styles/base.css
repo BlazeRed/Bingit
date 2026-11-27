@@ -137,6 +137,73 @@ textarea {
   cursor: pointer;
 }
 
+.button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.button--danger {
+  background: var(--color-danger);
+  color: var(--color-bg);
+}
+
+.button--danger-outline {
+  display: inline-flex;
+  gap: var(--space-2);
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+/* The library status in the side panel; opens the status sheet. */
+.status-badge {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-wash);
+  color: var(--color-on-wash);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* Underlined tabs (Reka Tabs). */
+.tabs {
+  display: flex;
+  column-gap: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabs button {
+  display: flex;
+  /* The smaller count shares the baseline of the label. `wrap` lets the line be centered. */
+  flex-wrap: wrap;
+  place-content: center;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.tabs button[data-state='active'] {
+  border-bottom-color: var(--color-action);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
 /* A section action or an external link: icon and text, no underline. */
 .action-link {
   display: inline-flex;

@@ -32,39 +32,51 @@ h2 {
   font-size: var(--text-md);
 }
 
+/* Reaches the screen edges, so the row visibly scrolls. */
 ul {
   display: flex;
-  gap: var(--space-4);
-  margin: 0;
-  padding: 0 0 var(--space-2);
+  gap: var(--space-3);
+  margin: 0 calc(-1 * var(--space-5));
+  padding: 0 var(--space-5) var(--space-2);
   overflow-x: auto;
   list-style: none;
 }
 
 li {
   flex: none;
-  width: 4.5rem;
+  width: 5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-1);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  text-align: center;
 }
 
 img,
 .placeholder {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
   object-fit: cover;
   background: var(--color-surface-sunken);
 }
 
-a {
-  color: var(--color-text);
-  font-weight: var(--weight-medium);
+li > a,
+li > img + span,
+li > .placeholder + span {
+  font-weight: var(--weight-semibold);
 }
 
-.role {
+a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+li > .role {
   color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
 }
 </style>

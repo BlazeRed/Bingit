@@ -207,7 +207,19 @@ Profile, stats on demand, appearance (System / Light / Dark), sync (status, requ
 
 ### Title page
 
-Full-width backdrop (brand gradient when there is none) with a back button, overlapping poster, facts and scores; status select beside the progress bar; overview, your rating, episodes with the next one highlighted, where to watch (browser language country; not in the mock, added from §3), one-row cast, links.
+Mock: https://claude.ai/artifact/1HpftMTopPXFjyK1284aw8
+
+No backdrop. Top bar: back button; when the title is in the library, a status chip (information only) and "⋯" (opens the status sheet). Header: poster, and beside it the English title, the original title, season or release date, episodes and runtime, next episode and up to three genres. Then the season row with the progress of the chosen season, "Add to Watchlist" (only when not added) and "Mark watched" (movies), one card with the platform scores and your rating (five stars with halves = 1–10), and tabs:
+
+- **Episodes** (series): the episode list. A started series opens here, else on Info.
+- **Info**: overview, where to watch (browser language country), cast or characters and staff, details (with all genres), trailers (YouTube thumbnails), "View on Simkl".
+- **Related**: related anime ("Same story": Simkl `relations` without the seasons; direct links first, then by year, summaries last) and similar titles (Simkl `users_recommendations`) as posters.
+
+Status changes live in a bottom sheet with a separate "Remove from library" button and a confirmation. The desktop side panel opens the same sheet from its status button.
+
+**Season row.** TV shows and anime use the same row and place. A TV season changes the episode list on the same page (status and rating belong to the whole show; the bar shows the season and the total). An anime season opens its own title.
+
+**Anime seasons.** Simkl keeps each season as its own title. Its distant `relations` are not reliable (remakes show as sequels), so the app walks the direct `season`, `prequel` and `sequel` links title by title (free requests, cached; also through films and specials), shows the TV and ONA titles it finds, ordered by first air date. Checked against AniList on 13 series. Status, progress and rating belong to the chosen season. Films and specials go to Related.
 
 ### Quick add
 

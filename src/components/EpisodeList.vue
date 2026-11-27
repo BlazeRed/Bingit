@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { Check } from '@lucide/vue'
 
 import type { SimklEpisode } from '@/api/catalog'
 import type { Episodes } from '@/library/episodes'
-import type { Season } from '@/title/model'
+import { currentSeason, type Season } from '@/title/model'
 
 const props = defineProps<{
   seasons: Season[]
   watched: Episodes
-  /** Side panel: only the current season, small rows. */
+  /** The season to show; without it, the one the user is in. */
+  season?: number
+  /** Side panel: small rows. */
   compact?: boolean
 }>()
 const emit = defineEmits<{ watch: [episodes: Episodes]; unwatch: [episodes: Episodes] }>()
@@ -17,14 +19,12 @@ const emit = defineEmits<{ watch: [episodes: Episodes]; unwatch: [episodes: Epis
 const isWatched = (season: number, episode: number) =>
   props.watched[season]?.includes(episode) ?? false
 
-/** Open the season the user is in. */
-const firstOpenSeason = props.seasons.find((season) =>
-  season.episodes.some((e) => e.aired && !isWatched(season.number, e.episode)),
-)
-const selected = ref((firstOpenSeason ?? props.seasons.at(-1))?.number)
+/** Read once: the list must not jump away when the last episode gets marked. */
+const initial = currentSeason(props.seasons, props.watched)
+const selected = computed(() => props.season ?? initial)
 
-const season = computed(() => props.seasons.find((s) => s.number === selected.value))
-const aired = computed(() => season.value?.episodes.filter((e) => e.aired) ?? [])
+const shown = computed(() => props.seasons.find((s) => s.number === selected.value))
+const aired = computed(() => shown.value?.episodes.filter((e) => e.aired) ?? [])
 const unwatched = computed(() => aired.value.filter((e) => !isWatched(selected.value!, e.episode)))
 
 /** The first aired episode still to watch. */
@@ -60,30 +60,17 @@ const airDate = (date?: string | null) =>
 <template>
   <section class="episodes" :class="{ 'episodes--compact': compact }" aria-label="Episodes">
     <p v-if="compact" class="episodes__summary">
-      Season {{ selected }} · {{ watchedInSeason }} of {{ season?.episodes.length }} watched
+      Season {{ selected }} · {{ watchedInSeason }} of {{ shown?.episodes.length }} watched
     </p>
-    <div v-else class="episodes__bar">
-      <div v-if="seasons.length > 1" class="episodes__seasons">
-        <button
-          v-for="s in seasons"
-          :key="s.number"
-          type="button"
-          class="chip"
-          :aria-pressed="s.number === selected"
-          @click="selected = s.number"
-        >
-          Season {{ s.number }}
-        </button>
-      </div>
-      <h2 v-else>Episodes</h2>
-      <button v-if="aired.length" type="button" class="chip" @click="toggleSeason">
+    <div v-else-if="aired.length" class="episodes__bar">
+      <button type="button" class="chip" @click="toggleSeason">
         {{ unwatched.length ? 'Mark season watched' : 'Unmark season' }}
       </button>
     </div>
 
     <ol>
       <li
-        v-for="episode in season?.episodes"
+        v-for="episode in shown?.episodes"
         :key="episode.episode"
         :class="{ episodes__next: episode === next }"
       >
@@ -128,20 +115,7 @@ const airDate = (date?: string | null) =>
 
 .episodes__bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  justify-content: space-between;
-  align-items: center;
-}
-
-.episodes__seasons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-h2 {
-  font-size: var(--text-md);
+  justify-content: flex-end;
 }
 
 .chip {
@@ -153,12 +127,6 @@ h2 {
   font-size: var(--text-sm);
   white-space: nowrap;
   cursor: pointer;
-}
-
-.chip[aria-pressed='true'] {
-  border-color: var(--color-text);
-  background: var(--color-text);
-  color: var(--color-bg);
 }
 
 ol {

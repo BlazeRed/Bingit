@@ -22,35 +22,6 @@ const count = (bucket: Bucket) =>
 </template>
 
 <style scoped>
-.tabs {
-  display: flex;
-  column-gap: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
-}
-
-button {
-  display: flex;
-  /* The smaller count shares the baseline of the label. `wrap` lets the line be centered. */
-  flex-wrap: wrap;
-  place-content: center;
-  align-items: baseline;
-  gap: var(--space-2);
-  min-height: var(--tap-min);
-  padding: 0;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--color-text-muted);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-}
-
-button[data-state='active'] {
-  border-bottom-color: var(--color-action);
-  color: var(--color-text);
-  font-weight: var(--weight-semibold);
-}
-
 span {
   font-size: var(--text-xs);
 }

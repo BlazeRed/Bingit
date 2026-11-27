@@ -7,6 +7,7 @@ import { del, get, set } from 'idb-keyval'
 import { getActivities, getAllItems, getRatings } from '@/api/simkl'
 import type { SimklActivities, SimklAllItems, SimklItemsKey } from '@/api/simkl-types'
 import { SYNC_LOCK } from '@/auth/session'
+import { decodeDeep } from '@/lib/entities'
 import { toLibraryItem, type LibraryItem } from '@/library/item'
 
 const LIBRARY_KEY = 'library'
@@ -34,7 +35,8 @@ const STATUSES = ['watching', 'plantowatch', 'hold', 'completed', 'dropped'] as 
 
 export async function readLibrary(): Promise<LibraryRecord | undefined> {
   const record = await get<LibraryRecord>(LIBRARY_KEY)
-  return record?.version === VERSION ? record : undefined
+  // Libraries saved before the decoding of Simkl texts still hold HTML entities.
+  return record?.version === VERSION ? { ...record, items: decodeDeep(record.items) } : undefined
 }
 
 /** Forgets the saved library, so that the next sync imports it again. */

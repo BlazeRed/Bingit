@@ -18,6 +18,18 @@ export interface SimklRelated {
   ids: SimklIds
 }
 
+/** An entry of the franchise graph of an anime. `is_direct`: the immediate neighbour. */
+export interface SimklRelation {
+  title: string
+  en_title?: string | null
+  year?: number | null
+  poster?: string | null
+  anime_type?: string | null
+  relation_type: string
+  is_direct?: boolean
+  ids: SimklIds
+}
+
 export interface SimklDetail {
   title: string
   en_title?: string | null
@@ -34,6 +46,15 @@ export interface SimklDetail {
   ratings?: Partial<Record<'simkl' | 'imdb' | 'mal', { rating?: number }>>
   trailers?: { name?: string | null; youtube: string }[] | null
   users_recommendations?: SimklRelated[] | null
+  /** Anime only. */
+  relations?: SimklRelation[] | null
+  /** Anime only, for example "Fall 2026". */
+  season_name_year?: string | null
+  studios?: { name: string }[] | null
+  status?: string | null
+  first_aired?: string | null
+  /** Movies. */
+  released?: string | null
 }
 
 export interface SimklEpisode {
@@ -56,7 +77,7 @@ export interface Person {
 }
 
 export function getDetail(type: MediaType, id: number): Promise<SimklDetail> {
-  return cachedFetch(`simkl:${type}:${id}`, SIMKL_TTL, async () => {
+  return cachedFetch(`simkl2:${type}:${id}`, SIMKL_TTL, async () => {
     const detail = await simklCatalog<SimklDetail | null>(`/${type}/${id}`)
     if (!detail?.title) throw new Error('Title not found on Simkl.')
     return detail
@@ -64,7 +85,7 @@ export function getDetail(type: MediaType, id: number): Promise<SimklDetail> {
 }
 
 export function getEpisodes(type: 'tv' | 'anime', id: number): Promise<SimklEpisode[]> {
-  return cachedFetch(`simkl:episodes:${id}`, SIMKL_TTL, async () => {
+  return cachedFetch(`simkl2:episodes:${id}`, SIMKL_TTL, async () => {
     const episodes = await simklCatalog<SimklEpisode[] | null>(`/${type}/episodes/${id}`)
     if (!Array.isArray(episodes)) throw new Error('Episode list not available.')
     return episodes
@@ -110,17 +131,6 @@ interface AniListMedia {
     edges: { node: AniListName; voiceActors: { id: number; name: { full: string } }[] }[]
   }
   staff: { edges: { role: string; node: AniListName }[] }
-  relations: {
-    edges: {
-      relationType: string
-      node: {
-        id: number
-        type: 'ANIME' | 'MANGA'
-        siteUrl: string
-        title: { romaji: string; english: string | null }
-      }
-    }[]
-  }
 }
 
 const ANIME_QUERY = `query ($id: Int) {
@@ -130,7 +140,6 @@ const ANIME_QUERY = `query ($id: Int) {
       edges { node { id name { full } image { medium } } voiceActors(language: JAPANESE) { id name { full } } }
     }
     staff(sort: RELEVANCE, perPage: 8) { edges { role node { id name { full } image { medium } } } }
-    relations { edges { relationType node { id type siteUrl title { romaji english } } } }
   }
 }`
 
@@ -143,7 +152,7 @@ const toPerson = (node: AniListName, role: string, profileId: number | null): Pe
 })
 
 export function getAnimeExtras(anilistId: string) {
-  return cachedFetch(`anilist2:${anilistId}`, SIMKL_TTL, async () => {
+  return cachedFetch(`anilist3:${anilistId}`, SIMKL_TTL, async () => {
     const { Media } = await anilistQuery<{ Media: AniListMedia }>(ANIME_QUERY, {
       id: Number(anilistId),
     })
@@ -154,13 +163,6 @@ export function getAnimeExtras(anilistId: string) {
         toPerson(node, actor?.name.full ?? '', actor?.id ?? null),
       ),
       staff: Media.staff.edges.map(({ node, role }) => toPerson(node, role, node.id)),
-      relations: Media.relations.edges.map(({ relationType, node }) => ({
-        id: node.id,
-        url: node.siteUrl,
-        isAnime: node.type === 'ANIME',
-        title: node.title.english ?? node.title.romaji,
-        relation: relationType.toLowerCase().replaceAll('_', ' '),
-      })),
     }
   })
 }

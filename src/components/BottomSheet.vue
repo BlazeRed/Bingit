@@ -10,7 +10,13 @@ import {
 } from 'reka-ui'
 import { X } from '@lucide/vue'
 
-defineProps<{ title: string; description: string; closeLabel: string }>()
+defineProps<{
+  title: string
+  description: string
+  closeLabel: string
+  /** As tall as its content, not the usual tall sheet. */
+  fit?: boolean
+}>()
 const isOpen = defineModel<boolean>('open', { required: true })
 </script>
 
@@ -18,7 +24,7 @@ const isOpen = defineModel<boolean>('open', { required: true })
   <DrawerRoot v-model:open="isOpen">
     <DrawerPortal>
       <DrawerOverlay class="sheet-overlay" />
-      <DrawerContent class="sheet">
+      <DrawerContent class="sheet" :class="{ 'sheet--fit': fit }">
         <header class="sheet__header">
           <DrawerTitle class="sheet__title">{{ title }}</DrawerTitle>
           <slot name="actions" />
@@ -60,6 +66,12 @@ const isOpen = defineModel<boolean>('open', { required: true })
   transform: translateY(var(--drawer-swipe-movement-y, 0));
   transition: transform var(--duration-base) var(--ease-out);
   animation: sheet-in var(--duration-base) var(--ease-out);
+}
+
+.sheet--fit {
+  height: auto;
+  max-height: 85dvh;
+  overflow-y: auto;
 }
 
 .sheet[data-swiping] {
