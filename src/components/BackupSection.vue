@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Download, Upload } from '@lucide/vue'
 import { ref, shallowRef } from 'vue'
 
 import { SignedOutError } from '@/auth/session'
@@ -68,27 +69,43 @@ const ratingCount = () => picked.value?.items.filter((item) => item.rating).leng
 <template>
   <section>
     <h2>Your data</h2>
-    <div class="card">
-      <p class="muted">
-        An export reads your whole library from Simkl (3 requests). JSON can be restored here; CSV
-        is for spreadsheets.
-      </p>
-      <div class="buttons">
-        <button type="button" class="field" :disabled="isExporting" @click="exportAs('json')">
-          Export JSON
-        </button>
-        <button type="button" class="field" :disabled="isExporting" @click="exportAs('csv')">
-          Export CSV
-        </button>
-      </div>
-      <p v-if="isExporting" class="muted" role="status">Preparing your export…</p>
+    <div class="card-list">
+      <button
+        type="button"
+        class="row row--button"
+        :disabled="isExporting"
+        @click="exportAs('json')"
+      >
+        <span class="row__text">
+          <strong>Export JSON</strong>
+          <span class="muted">Your whole library, can be restored here</span>
+        </span>
+        <Download :size="18" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="row row--button"
+        :disabled="isExporting"
+        @click="exportAs('csv')"
+      >
+        <span class="row__text">
+          <strong>Export CSV</strong>
+          <span class="muted">For spreadsheets</span>
+        </span>
+        <Download :size="18" aria-hidden="true" />
+      </button>
+      <p v-if="isExporting" class="row muted" role="status">Preparing your export…</p>
 
-      <label>
-        <strong>Restore from a Bingit JSON file</strong>
-        <input type="file" accept=".json,application/json" @change="pick" />
+      <label class="row row--button">
+        <span class="row__text">
+          <strong>Restore from a file</strong>
+          <span class="muted">A Bingit JSON export</span>
+        </span>
+        <Upload :size="18" aria-hidden="true" />
+        <input class="visually-hidden" type="file" accept=".json,application/json" @change="pick" />
       </label>
 
-      <div v-if="picked" class="preview">
+      <div v-if="picked" class="row row--stack">
         <p>
           {{ plural(picked.items.length, 'title') }},
           {{ plural(episodeCount(), 'watched episode') }}, {{ plural(ratingCount(), 'rating') }}.
@@ -100,50 +117,26 @@ const ratingCount = () => picked.value?.items.filter((item) => item.rating).leng
           Restoring adds history and ratings and sets each title's status. It removes nothing.
         </p>
         <div class="buttons">
+          <button type="button" class="button button--secondary" @click="picked = undefined">
+            Cancel
+          </button>
           <button type="button" class="button" :disabled="!picked.items.length" @click="restore">
             Restore to Simkl
           </button>
-          <button type="button" class="field" @click="picked = undefined">Cancel</button>
         </div>
       </div>
 
-      <p v-if="notice" class="muted" role="status">{{ notice }}</p>
-      <p v-if="error" class="error" role="alert">{{ error }}</p>
+      <p v-if="notice" class="row muted" role="status">{{ notice }}</p>
+      <p v-if="error" class="row error" role="alert">{{ error }}</p>
     </div>
+    <p class="muted">An export reads your library from Simkl (3 requests).</p>
   </section>
 </template>
 
 <style scoped>
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-}
-
 .buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-button {
-  cursor: pointer;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-strong {
-  font-weight: var(--weight-medium);
-}
-
-.preview {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-2);
 }
 </style>

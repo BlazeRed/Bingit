@@ -34,11 +34,12 @@ async function load() {
 <template>
   <section>
     <h2>Your stats</h2>
-    <div class="card">
+    <div class="card-list">
       <template v-if="summary">
-        <p>
+        <p class="row row--stack">
           <span class="muted">Time watched</span>
           <strong class="total">{{ summary.total }}</strong>
+          <span class="muted">Last 7 days: {{ summary.lastWeek }}</span>
         </p>
         <dl>
           <div>
@@ -54,9 +55,8 @@ async function load() {
             <dd class="mono">{{ count(summary.animeEpisodes) }}</dd>
           </div>
         </dl>
-        <p class="muted">Last 7 days: {{ summary.lastWeek }}</p>
       </template>
-      <template v-else>
+      <div v-else class="row row--stack">
         <p class="muted">
           Simkl calculates stats from your whole history each time, so they load only when you ask.
         </p>
@@ -64,38 +64,34 @@ async function load() {
           {{ isLoading ? 'Loading…' : 'Load my stats' }}
         </button>
         <p v-if="error" class="error" role="alert">{{ error }}</p>
-      </template>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-}
-
-.total {
-  display: block;
+.row .total {
   font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
 }
 
 dl {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
   margin: 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
 }
 
 dl div {
   display: flex;
-  flex-direction: column-reverse;
-  padding: var(--space-3);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-sunken);
+  flex-direction: column;
+}
+
+dl div + div {
+  border-left: 1px solid var(--color-border);
 }
 
 dt {

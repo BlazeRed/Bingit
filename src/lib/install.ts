@@ -1,4 +1,4 @@
-/** Installing the app: a browser prompt where it exists, instructions on iOS. */
+/** Installing the app: a browser prompt where it exists, else instructions. */
 import { readonly, ref, shallowRef } from 'vue'
 
 /** Chromium only; not in the standard DOM types. */
@@ -21,10 +21,6 @@ export function listenForInstallPrompt(): void {
   })
 }
 
-/** iPadOS presents itself as a Mac, but has a touch screen. */
-export const isAppleMobile = (userAgent: string, touchPoints: number) =>
-  /iphone|ipad|ipod/i.test(userAgent) || (/macintosh/i.test(userAgent) && touchPoints > 1)
-
 export function useInstall() {
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches === true ||
@@ -39,8 +35,7 @@ export function useInstall() {
 
   return {
     canPrompt: () => promptEvent.value !== undefined,
-    needsInstructions:
-      !isStandalone && isAppleMobile(navigator.userAgent, navigator.maxTouchPoints),
+    isStandalone,
     isInstalled: readonly(isInstalled),
     install,
   }

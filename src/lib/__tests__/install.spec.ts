@@ -1,14 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { isAppleMobile, listenForInstallPrompt, useInstall } from '../install'
+import { listenForInstallPrompt, useInstall } from '../install'
 
 describe('install', () => {
-  it('recognises iPhones and iPads, not desktop Macs', () => {
-    expect(isAppleMobile('Mozilla/5.0 (iPhone; CPU iPhone OS 19_0)', 5)).toBe(true)
-    expect(isAppleMobile('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 5)).toBe(true)
-    expect(isAppleMobile('Mozilla/5.0 (Macintosh; Intel Mac OS X)', 0)).toBe(false)
-  })
-
   it('keeps the browser prompt and uses it once', async () => {
     listenForInstallPrompt()
     const prompt = vi.fn<() => Promise<void>>(async () => {})

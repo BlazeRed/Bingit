@@ -205,7 +205,7 @@ The list becomes a table (title, progress, next, rating, mark button) when it is
 
 ### Me (`/me`)
 
-Profile, stats on demand, appearance (System / Light / Dark), sync (status, requests today, clear saved data), **your data** (export JSON or CSV, restore from Bingit JSON; not in the mock, added from §4), about, sign out.
+Profile, then one card per section (same cards, rows and confirm dialog as the rest of the app; actions are whole rows with an icon): stats on demand, appearance (System / Light / Dark), sync (status, requests today, clear saved data), **your data** (export JSON or CSV, restore from Bingit JSON; not in the mock, added from §4), about, sign out. The page has no attribution footer: the About card holds it.
 
 ### Title page
 
@@ -229,7 +229,7 @@ Status changes live in a bottom sheet with a separate "Remove from library" butt
 
 ### Installed app (PWA)
 
-Me shows an "Install" section (not in the mock) when the browser can install, or with "Add to Home Screen" steps on iPhone and iPad; it is hidden once installed. A new version shows "Reload / Later" at the top; nothing reloads on its own.
+Me shows an "Install" row (not in the mock): it opens the browser's install dialog where there is one, else a bottom sheet with the steps for each platform; it is hidden once installed. A new version shows "Reload / Later" at the top; nothing reloads on its own.
 
 ### Still different from the mocks
 

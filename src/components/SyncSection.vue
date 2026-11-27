@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { RefreshCw, Trash2 } from '@lucide/vue'
 import { computed, onMounted, ref } from 'vue'
 
 import { nextReset, readQuota } from '@/api/quota'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { timeAgo } from '@/me/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -29,19 +31,15 @@ onMounted(async () => {
   if (usage) storage.value = `Uses ${(usage / 1_048_576).toFixed(1)} MB on this device.`
 })
 
-function clearData() {
-  const question =
-    'Delete the saved library and cache on this device, then import again from Simkl?'
-  if (confirm(question)) void library.reimport()
-}
+const isConfirming = ref(false)
 </script>
 
 <template>
   <section>
     <h2>Sync</h2>
-    <div class="card">
+    <div class="card-list">
       <div class="row">
-        <p>
+        <p class="row__text">
           <strong>
             {{ library.checkedAt ? `Synced ${timeAgo(library.checkedAt)}` : 'Not synced yet' }}
           </strong>
@@ -49,11 +47,13 @@ function clearData() {
         </p>
         <button
           type="button"
-          class="field"
+          class="action-link"
           :disabled="library.isSyncing"
           @click="library.sync(true)"
         >
-          {{ library.isSyncing ? 'Syncing…' : 'Sync now' }}
+          <RefreshCw :size="16" aria-hidden="true" />{{
+            library.isSyncing ? 'Syncing…' : 'Sync now'
+          }}
         </button>
       </div>
       <p v-if="library.pending.length" class="row muted">
@@ -70,63 +70,37 @@ function clearData() {
         <span class="muted">{{ plan }} at {{ resetTime }}</span>
       </div>
 
-      <button type="button" class="row row--button" @click="clearData">
-        <strong>Clear saved data on this device</strong>
-        <span class="muted">You stay signed in. {{ storage }}</span>
+      <button type="button" class="row row--button" @click="isConfirming = true">
+        <span class="row__text">
+          <strong>Clear saved data on this device</strong>
+          <span class="muted">You stay signed in. {{ storage }}</span>
+        </span>
+        <Trash2 :size="18" aria-hidden="true" />
       </button>
     </div>
+    <ConfirmDialog
+      v-model:open="isConfirming"
+      title="Clear saved data?"
+      description="Bingit deletes the saved library and cache on this device, then imports again from Simkl."
+      action="Clear"
+      @confirm="library.reimport()"
+    />
   </section>
 </template>
 
 <style scoped>
-.row {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-}
-
-.row + .row {
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.row p {
-  display: flex;
-  flex-direction: column;
-}
-
-strong {
-  font-weight: var(--weight-medium);
-}
-
-.row--stack {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-2);
-}
-
 .row .row__line {
+  display: flex;
   flex-direction: row;
   justify-content: space-between;
 }
 
-.row--button {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  width: 100%;
-  border: 0;
-  border-top: 1px solid var(--color-border-subtle);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
 progress {
   width: 100%;
-  height: 3px;
+  height: 6px;
+  overflow: hidden;
   border: 0;
+  border-radius: var(--radius-full);
   background: var(--color-track);
   appearance: none;
 }
