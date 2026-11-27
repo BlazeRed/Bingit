@@ -16,6 +16,8 @@ defineProps<{
   closeLabel: string
   /** As tall as its content, not the usual tall sheet. */
   fit?: boolean
+  /** A wider dialog on desktop. */
+  wide?: boolean
 }>()
 const isOpen = defineModel<boolean>('open', { required: true })
 </script>
@@ -24,7 +26,7 @@ const isOpen = defineModel<boolean>('open', { required: true })
   <DrawerRoot v-model:open="isOpen">
     <DrawerPortal>
       <DrawerOverlay class="sheet-overlay" />
-      <DrawerContent class="sheet" :class="{ 'sheet--fit': fit }">
+      <DrawerContent class="sheet" :class="{ 'sheet--fit': fit, 'sheet--wide': wide }">
         <header class="sheet__header">
           <DrawerTitle class="sheet__title">{{ title }}</DrawerTitle>
           <slot name="actions" />
@@ -114,6 +116,44 @@ const isOpen = defineModel<boolean>('open', { required: true })
 @keyframes sheet-fade {
   from {
     opacity: 0;
+  }
+}
+
+/* Desktop: a dialog in the middle of the window. */
+@media (min-width: 64rem) {
+  .sheet {
+    top: 50%;
+    bottom: auto;
+    max-width: 36rem;
+    height: min(85dvh, 44rem);
+    border-radius: var(--radius-xl);
+    translate: 0 -50%;
+    /* No swipe to follow with a mouse. */
+    transform: none;
+    animation: sheet-fade var(--duration-base) var(--ease-out);
+  }
+
+  .sheet:not(.sheet--fit) {
+    overflow: hidden;
+  }
+
+  .sheet--wide {
+    max-width: 56rem;
+  }
+
+  .sheet--fit {
+    height: auto;
+  }
+
+  .sheet[data-state='closed'] {
+    animation: dialog-out var(--duration-base) var(--ease-out) forwards;
+  }
+
+  /* Its own name: the dialog waits for it before it leaves the page. */
+  @keyframes dialog-out {
+    to {
+      opacity: 0;
+    }
   }
 }
 </style>

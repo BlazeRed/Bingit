@@ -121,6 +121,24 @@ header {
 .me__tmdb {
   align-self: flex-start;
 }
+
+@media (min-width: 64rem) {
+  .me {
+    display: block;
+    max-width: var(--content-max);
+    columns: 2;
+    column-gap: var(--space-6);
+  }
+
+  .me > * {
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
+  }
+
+  .me > header {
+    column-span: all;
+  }
+}
 </style>
 
 <!-- Shared by the sections of this page. -->

@@ -37,6 +37,10 @@ onUnmounted(() => wide?.removeEventListener('change', onResize))
 
 const selected = computed(() => (isWide.value ? library.byId[Number(route.query.item)] : undefined))
 
+function closePanel() {
+  if (selected.value) void router.replace({ query: { ...route.query, item: undefined } })
+}
+
 function select(event: MouseEvent) {
   const modified = event.ctrlKey || event.metaKey || event.shiftKey || event.altKey
   const link = (event.target as HTMLElement).closest('.entry__link')
@@ -70,7 +74,7 @@ watch(layout, (value) => localStorage.setItem('bingit-layout', value))
 </script>
 
 <template>
-  <div class="split">
+  <div class="split" @keydown.esc="closePanel">
     <main class="library">
       <TabsRoot
         class="library__tabs"
@@ -123,6 +127,7 @@ watch(layout, (value) => localStorage.setItem('bingit-layout', value))
 
     <BottomSheet
       v-model:open="isArchiveOpen"
+      wide
       title="Archive"
       :description="`${TYPES[selection.type]} you have seen, paused or dropped.`"
       close-label="Close archive"
@@ -230,5 +235,28 @@ h1 {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-4) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 64rem) {
+  .split {
+    justify-content: center;
+  }
+
+  /* Category and title filter share one row, while there is room for both. */
+  .library__header {
+    flex-flow: row wrap;
+  }
+
+  .library__header > * {
+    flex: 1 0 100%;
+  }
+
+  .library__header > :nth-child(2) {
+    flex: 0 0 18rem;
+  }
+
+  .library__header > :nth-child(3) {
+    flex: 1 1 12rem;
+  }
 }
 </style>

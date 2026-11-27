@@ -104,4 +104,10 @@ dd {
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
 }
+
+@media (min-width: 64rem) {
+  .row--stack > .button {
+    align-self: flex-start;
+  }
+}
 </style>

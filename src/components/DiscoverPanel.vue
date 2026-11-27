@@ -118,7 +118,13 @@ const MOST_WATCHED = {
 <template>
   <div class="pinned">
     <slot />
-    <SegmentedControl v-show="!hidden" v-model="type" :options="TYPES" label="Category" />
+    <SegmentedControl
+      v-show="!hidden"
+      v-model="type"
+      class="category"
+      :options="TYPES"
+      label="Category"
+    />
     <div v-show="!hidden" class="filters">
       <FilterSheet
         :model-value="list"
@@ -146,7 +152,7 @@ const MOST_WATCHED = {
     <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
     <p v-else-if="!cards?.length" class="muted">{{ emptyMessage }}</p>
     <template v-else>
-      <ul class="card-list">
+      <ul class="card-list card-grid">
         <TitleRow v-for="card in cards.slice(0, shown)" :key="card.id" :card="card" />
       </ul>
       <button v-if="shown < cards.length" type="button" class="field" @click="shown += PAGE">
@@ -170,5 +176,21 @@ const MOST_WATCHED = {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
+}
+
+@media (min-width: 64rem) {
+  .pinned {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Title and search field take a whole row; category and filters share one. */
+  :slotted(*) {
+    grid-column: 1 / -1;
+  }
+
+  .discover > .field {
+    align-self: center;
+  }
 }
 </style>

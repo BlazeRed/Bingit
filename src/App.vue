@@ -5,7 +5,6 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import AddedToast from '@/components/AddedToast.vue'
 import AppNav from '@/components/AppNav.vue'
 import AppUpdate from '@/components/AppUpdate.vue'
-import SearchBar from '@/components/SearchBar.vue'
 import WriteFailures from '@/components/WriteFailures.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
@@ -98,8 +97,6 @@ onUnmounted(() => {
   <AppUpdate />
 
   <div class="frame" :class="{ shell: auth.status === 'signedIn', landing: isLanding }">
-    <SearchBar v-if="auth.status === 'signedIn' && route.name !== 'search'" @open="goToSearch" />
-
     <p v-if="!isOnline" class="offline" role="status">
       You are offline. Changes are saved and sent later.
     </p>
@@ -195,6 +192,12 @@ onUnmounted(() => {
 @media (min-width: 64rem) {
   .shell {
     padding: 0 0 0 var(--sidebar-w);
+  }
+
+  .attribution {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
   }
 }
 </style>

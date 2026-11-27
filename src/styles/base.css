@@ -86,6 +86,30 @@ textarea {
   font-size: var(--text-md);
 }
 
+@media (min-width: 64rem) {
+  /* Pages sit in the middle of the space beside the sidebar. */
+  .page {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  /* A card list in columns: one card per entry. */
+  .card-list.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    gap: var(--space-3);
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .card-list.card-grid > li {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+  }
+}
+
 /* Title and controls that stay on top while the list scrolls. */
 .pinned {
   position: sticky;

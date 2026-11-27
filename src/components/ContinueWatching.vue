@@ -64,8 +64,8 @@ li + li {
 @media (min-width: 64rem) {
   ul {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(10.25rem, 1fr));
+    gap: var(--space-3);
     overflow: visible;
     border: 0;
     background: transparent;

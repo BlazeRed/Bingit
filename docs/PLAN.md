@@ -178,18 +178,28 @@ Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 
 Section actions and external links use one style (icon + text, no arrows).
 
-Desktop: two columns. Left: continue watching as landscape cards, 3 per row, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
+Desktop: two columns. Left: continue watching as landscape cards, as many per row as fit (5 on a wide window), then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
 
 ### Search (`/search`)
 
 - Empty box → **discover**: category, then two filter buttons, each opening a bottom sheet: list (trending today / week / month; top rated, new premieres, coming soon for TV and anime) and genre (with a text filter). Both apply together; for today and this week the genre is picked from the 500 most watched. Rows: rating, quick add.
 - Title, search field, category and filter buttons stay pinned at the top, as in Library.
 - Opening a title and going back keeps filters, results and scroll (the page is kept alive until sign-out; a reload resets the discover filters).
-- Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` or the desktop top bar focuses it from anywhere.
+- Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` focuses it from anywhere.
 
 ### Navigation
 
-Up next · Library · Search · Me. On desktop, every page except Search has a search button in a top bar. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts, counts, and the user with the last sync time.
+Up next · Library · Search · Me. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with the logo, the four entries and the user with the last sync time. No top bar and no category shortcuts (removed 2026-11-27).
+
+### Desktop layout
+
+Everything below applies from 1024 px only; the phone layout does not change. It was agreed without new mocks (2026-11-27).
+
+- Page content is centred in the space beside the sidebar, at most 80rem wide.
+- Bottom sheets become centred dialogs; the archive dialog is wider.
+- Title page: two columns. Left: header, season row, actions and ratings. Right: tabs.
+- Search: category and the two filters share a row; results are cards in columns.
+- Me: two columns.
 
 ### Library
 
@@ -201,7 +211,7 @@ Use the Reka UI primitive when one exists (Drawer, Tabs, ToggleGroup, Checkbox) 
 
 ### Library on desktop
 
-The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, rating, "View on Simkl", the current season); the panel's title opens the title page. Modified clicks behave as links.
+The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, rating, "View on Simkl", the current season); the panel's title opens the title page, `Esc` closes the panel. Category and title filter share a row; rows are compact. Modified clicks behave as links.
 
 ### Me (`/me`)
 

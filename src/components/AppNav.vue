@@ -1,24 +1,19 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { Bookmark, LibraryBig, Search, User } from '@lucide/vue'
 
-import { parseSelection, TYPES } from '@/library/browse'
+import AppLogo from './AppLogo.vue'
 import { initials, timeAgo } from '@/me/format'
 import { useAuthStore } from '@/stores/auth'
 import { useLibraryStore } from '@/stores/library'
 
-const route = useRoute()
 const library = useLibraryStore()
 const auth = useAuthStore()
-
-const total = (type: string) => library.items.filter((item) => item.type === type).length
-const isCurrentType = (type: string) =>
-  route.name === 'library' && parseSelection(route.params.type, undefined).type === type
 </script>
 
 <template>
   <nav class="nav" aria-label="Main">
-    <p class="nav__brand">Bingit</p>
+    <p class="nav__brand"><AppLogo />Bingit</p>
     <RouterLink class="nav__link" :to="{ name: 'home' }">
       <Bookmark :size="22" aria-hidden="true" />Up next
     </RouterLink>
@@ -31,18 +26,6 @@ const isCurrentType = (type: string) =>
     <RouterLink class="nav__link" :to="{ name: 'me' }">
       <User :size="22" aria-hidden="true" />Me
     </RouterLink>
-
-    <div class="nav__shortcuts">
-      <RouterLink
-        v-for="(label, type) in TYPES"
-        :key="type"
-        class="nav__shortcut"
-        :class="{ 'nav__shortcut--current': isCurrentType(type) }"
-        :to="{ name: 'library', params: { type } }"
-      >
-        {{ label }} <span class="mono">{{ total(type) }}</span>
-      </RouterLink>
-    </div>
 
     <RouterLink v-if="auth.userName" class="nav__user" :to="{ name: 'me' }">
       <span class="avatar" aria-hidden="true">{{ initials(auth.userName) }}</span>
@@ -70,7 +53,6 @@ const isCurrentType = (type: string) =>
 }
 
 .nav__brand,
-.nav__shortcuts,
 .nav__user {
   display: none;
 }
@@ -105,11 +87,18 @@ const isCurrentType = (type: string) =>
   }
 
   .nav__brand {
-    display: block;
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
     margin-bottom: var(--space-5);
     padding: 0 var(--space-3);
     font-size: var(--text-lg);
     font-weight: var(--weight-title);
+  }
+
+  .nav__brand svg {
+    width: 2rem;
+    height: 2rem;
   }
 
   .nav__link {
@@ -126,24 +115,6 @@ const isCurrentType = (type: string) =>
   .nav__link.router-link-active {
     background: var(--color-wash);
     color: var(--color-on-wash);
-  }
-
-  .nav__shortcuts {
-    display: flex;
-    flex-direction: column;
-    margin-top: var(--space-5);
-  }
-
-  .nav__shortcut {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-height: var(--control-h);
-    padding: 0 var(--space-3);
-    border-radius: var(--radius-md);
-    color: var(--color-text);
-    font-size: var(--text-sm);
-    text-decoration: none;
   }
 
   .nav__user {
@@ -163,11 +134,6 @@ const isCurrentType = (type: string) =>
     display: block;
     font-size: var(--text-2xs);
     color: var(--color-text-muted);
-  }
-
-  .nav__shortcut--current {
-    background: var(--color-surface-sunken);
-    font-weight: var(--weight-semibold);
   }
 }
 </style>

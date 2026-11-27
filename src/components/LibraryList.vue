@@ -90,4 +90,15 @@ ul {
   grid-template-columns: repeat(auto-fill, minmax(var(--poster-card-w), 1fr));
   gap: var(--space-4) var(--space-3);
 }
+
+/* Shorter rows with a mouse. */
+@media (min-width: 64rem) {
+  .list {
+    --poster-list-w: 2rem;
+  }
+
+  .list :deep(.entry--list) {
+    padding-block: var(--space-2);
+  }
+}
 </style>

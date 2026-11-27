@@ -262,74 +262,76 @@ const similar = computed<PosterCard[]>(() =>
     </div>
 
     <div v-else class="title__body">
-      <header class="title__header">
-        <img
-          v-if="detail.poster"
-          class="title__poster"
-          :src="posterUrl(detail.poster, '_ca')"
-          alt=""
-          width="190"
-          height="279"
-        />
-        <span v-else class="title__poster" />
-        <div class="title__heading">
-          <h1>{{ name }}</h1>
-          <p v-if="originalName" class="muted">{{ originalName }}</p>
-          <p class="muted mono">{{ facts }}</p>
-          <p v-if="nextAiring" class="title__next">{{ nextAiring }}</p>
-          <ul v-if="detail.genres?.length" class="title__genres" aria-label="Genres">
-            <li v-for="genre in detail.genres.slice(0, 3)" :key="genre">{{ genre }}</li>
-          </ul>
-        </div>
-      </header>
-
-      <div v-if="seasonCards.length || progress" class="title__season">
-        <SeasonNav
-          v-if="seasonCards.length"
-          :seasons="seasonCards"
-          :current="type === 'anime' ? id : shownSeason!"
-          :linked="type === 'anime'"
-          @select="pickSeason"
-        />
-        <div v-if="progress" class="title__progress">
-          <span class="title__track"><span :style="{ width: `${progress.percent}%` }" /></span>
-          <span class="muted mono">{{ progress.label }}</span>
-        </div>
-      </div>
-
-      <button
-        v-if="!item"
-        type="button"
-        class="button title__action"
-        @click="act({ kind: 'status', to: 'plantowatch' })"
-      >
-        <Plus :size="18" aria-hidden="true" />Add to Watchlist
-      </button>
-      <button
-        v-if="isMovie && item?.status !== 'completed'"
-        type="button"
-        class="button title__action"
-        :class="{ 'button--secondary': !item }"
-        @click="act({ kind: 'watch' })"
-      >
-        <Check :size="18" aria-hidden="true" />Mark watched
-      </button>
-
-      <div class="title__ratings">
-        <dl v-if="scores.length" class="title__scores">
-          <div v-for="score in scores" :key="score.source">
-            <dt>{{ score.source }}</dt>
-            <dd class="mono">{{ score.value }}</dd>
+      <div class="title__side">
+        <header class="title__header">
+          <img
+            v-if="detail.poster"
+            class="title__poster"
+            :src="posterUrl(detail.poster, '_ca')"
+            alt=""
+            width="190"
+            height="279"
+          />
+          <span v-else class="title__poster" />
+          <div class="title__heading">
+            <h1>{{ name }}</h1>
+            <p v-if="originalName" class="muted">{{ originalName }}</p>
+            <p class="muted mono">{{ facts }}</p>
+            <p v-if="nextAiring" class="title__next">{{ nextAiring }}</p>
+            <ul v-if="detail.genres?.length" class="title__genres" aria-label="Genres">
+              <li v-for="genre in detail.genres.slice(0, 3)" :key="genre">{{ genre }}</li>
+            </ul>
           </div>
-        </dl>
-        <RatingPicker
-          :rating="item?.rating ?? null"
-          @rate="(rating) => act({ kind: 'rate', rating })"
-        />
-      </div>
+        </header>
 
-      <p v-if="library.pendingIds.has(id)" class="muted" role="status">Waiting to send…</p>
-      <p v-for="warning in warnings" :key="warning" class="muted" role="status">{{ warning }}</p>
+        <div v-if="seasonCards.length || progress" class="title__season">
+          <SeasonNav
+            v-if="seasonCards.length"
+            :seasons="seasonCards"
+            :current="type === 'anime' ? id : shownSeason!"
+            :linked="type === 'anime'"
+            @select="pickSeason"
+          />
+          <div v-if="progress" class="title__progress">
+            <span class="title__track"><span :style="{ width: `${progress.percent}%` }" /></span>
+            <span class="muted mono">{{ progress.label }}</span>
+          </div>
+        </div>
+
+        <button
+          v-if="!item"
+          type="button"
+          class="button title__action"
+          @click="act({ kind: 'status', to: 'plantowatch' })"
+        >
+          <Plus :size="18" aria-hidden="true" />Add to Watchlist
+        </button>
+        <button
+          v-if="isMovie && item?.status !== 'completed'"
+          type="button"
+          class="button title__action"
+          :class="{ 'button--secondary': !item }"
+          @click="act({ kind: 'watch' })"
+        >
+          <Check :size="18" aria-hidden="true" />Mark watched
+        </button>
+
+        <div class="title__ratings">
+          <dl v-if="scores.length" class="title__scores">
+            <div v-for="score in scores" :key="score.source">
+              <dt>{{ score.source }}</dt>
+              <dd class="mono">{{ score.value }}</dd>
+            </div>
+          </dl>
+          <RatingPicker
+            :rating="item?.rating ?? null"
+            @rate="(rating) => act({ kind: 'rate', rating })"
+          />
+        </div>
+
+        <p v-if="library.pendingIds.has(id)" class="muted" role="status">Waiting to send…</p>
+        <p v-for="warning in warnings" :key="warning" class="muted" role="status">{{ warning }}</p>
+      </div>
 
       <TabsRoot v-model="tab" class="title__tabs">
         <TabsList class="tabs" aria-label="Title sections">
@@ -689,5 +691,47 @@ h2 {
 .title__trailers svg {
   position: relative;
   filter: drop-shadow(0 1px 4px rgb(0 0 0 / 0.7));
+}
+
+/* On a phone the two columns do not exist. */
+.title__side {
+  display: contents;
+}
+
+@media (min-width: 64rem) {
+  .title {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+
+  .title__body:has(> .title__side) {
+    display: grid;
+    grid-template-columns: clamp(18rem, 34%, 24rem) minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: start;
+  }
+
+  .title__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}
+
+/* The larger poster needs the full left column. */
+@media (min-width: 80rem) {
+  .title__poster {
+    width: 9rem;
+    height: 13.5rem;
+  }
+}
+
+/* Only where the left column fits the window: else its end is out of reach. */
+@media (min-width: 64rem) and (min-height: 48rem) {
+  .title__side {
+    position: sticky;
+    top: var(--space-4);
+  }
 }
 </style>

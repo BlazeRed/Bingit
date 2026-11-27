@@ -98,7 +98,7 @@ onUnmounted(cancel)
       <p v-else class="muted" role="status">
         {{ results.length ? `${results.length} results` : 'No title found.' }}
       </p>
-      <ul v-if="results?.length" class="card-list">
+      <ul v-if="results?.length" class="card-list card-grid">
         <TitleRow v-for="card in results" :key="card.id" :card="card" />
       </ul>
     </template>
@@ -109,5 +109,16 @@ onUnmounted(cancel)
 /* The pinned header brings its own top space. */
 .search {
   padding-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .search {
+    max-width: var(--content-max);
+  }
+
+  .search :deep(.segmented[aria-label='Search in']) {
+    justify-self: start;
+    width: 28rem;
+  }
 }
 </style>

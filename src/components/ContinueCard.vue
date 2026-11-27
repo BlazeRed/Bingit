@@ -61,7 +61,7 @@ function mark() {
       >
         {{ item.title }}
       </RouterLink>
-      <span class="muted">
+      <span class="card__episode muted">
         <span class="card__code mono">{{ code }}</span>
         <template v-if="located?.name"> · {{ located.name }}</template>
       </span>
@@ -170,11 +170,24 @@ function mark() {
   }
 
   .card__text {
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-3);
+  }
+
+  /* One line: the cards of a row stay level. */
+  .card__episode {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .card__mark {
-    margin: 0 var(--space-4) var(--space-3);
+    margin: 0 var(--space-3) var(--space-3);
+    padding: 0 var(--space-1);
+    white-space: nowrap;
+  }
+
+  .card__mark svg {
+    flex: none;
   }
 
   .card__long {
