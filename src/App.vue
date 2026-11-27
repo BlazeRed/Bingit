@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import AddedToast from '@/components/AddedToast.vue'
@@ -42,6 +42,9 @@ function sendWhenOnline() {
   trackOnline()
   if (auth.status === 'signedIn') void library.send()
 }
+
+/** The signed-out home page fills the screen. */
+const isLanding = computed(() => route.name === 'home' && auth.status !== 'signedIn')
 
 const isOnline = ref(navigator.onLine)
 const trackOnline = () => (isOnline.value = navigator.onLine)
@@ -94,7 +97,7 @@ onUnmounted(() => {
   <AddedToast v-if="auth.status === 'signedIn'" />
   <AppUpdate />
 
-  <div :class="{ shell: auth.status === 'signedIn' }">
+  <div :class="{ shell: auth.status === 'signedIn', landing: isLanding }">
     <SearchBar v-if="auth.status === 'signedIn' && route.name !== 'search'" @open="goToSearch" />
 
     <p v-if="!isOnline" class="offline" role="status">
@@ -152,6 +155,30 @@ onUnmounted(() => {
   padding: var(--space-4) var(--space-5);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+}
+
+.landing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-velvet-rose) 28%, var(--color-bg)),
+    color-mix(in srgb, var(--brand-apricot) 12%, var(--color-bg)) 30%,
+    var(--color-bg) 60%
+  );
+}
+
+.landing #content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.landing .attribution {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
 
 @media (min-width: 64rem) {

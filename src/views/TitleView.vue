@@ -7,6 +7,7 @@ import EpisodeList from '@/components/EpisodeList.vue'
 import PeopleList from '@/components/PeopleList.vue'
 import RatingPicker from '@/components/RatingPicker.vue'
 import StatusSelect from '@/components/StatusSelect.vue'
+import WatchProviders from '@/components/WatchProviders.vue'
 import ErrorNote from '@/components/ErrorNote.vue'
 import { fanartUrl, posterUrl } from '@/api/images'
 import { TYPES } from '@/library/browse'
@@ -23,7 +24,10 @@ const type = ROUTE_TYPES[routeType(String(route.params.type))]
 const id = Number(route.params.id)
 
 const library = useLibraryStore()
-const { detail, seasons, cast, anime, error, warnings, load } = useTitleDetail(type, id)
+const { detail, seasons, cast, anime, watchOptions, error, warnings, load } = useTitleDetail(
+  type,
+  id,
+)
 
 const { item, subject, isMovie, watched, isHistoryUnknown, act } = useTitleActions(
   type,
@@ -164,6 +168,8 @@ const nextAiring = computed(() => {
             @unwatch="(episodes) => act({ kind: 'unwatch', episodes })"
           />
         </template>
+
+        <WatchProviders v-if="watchOptions" :options="watchOptions" />
 
         <PeopleList v-if="cast.length" title="Cast · TMDB" :people="cast" profile="person" />
         <PeopleList

@@ -9,6 +9,7 @@ import {
   type Person,
   type SimklDetail,
 } from '@/api/catalog'
+import { getWatchOptions, type WatchOptions } from '@/api/watch-providers'
 import { messageOf } from '@/lib/errors'
 import type { MediaType } from '@/library/item'
 import { toSeasons, type Season } from './model'
@@ -19,6 +20,7 @@ export function useTitleDetail(type: MediaType, id: number, { withPeople = true 
   const seasons = shallowRef<Season[]>([])
   const cast = shallowRef<Person[]>([])
   const anime = shallowRef<AnimeExtras>()
+  const watchOptions = shallowRef<WatchOptions | null>(null)
   const error = ref('')
   const warnings = ref<string[]>([])
 
@@ -39,6 +41,17 @@ export function useTitleDetail(type: MediaType, id: number, { withPeople = true 
     }
   }
 
+  async function loadWatchOptions({ ids, anime_type }: SimklDetail) {
+    if (!ids.tmdb) return
+    // OVAs and specials are skipped: their TMDB id can point to another title.
+    if (type === 'anime' && anime_type !== 'tv' && anime_type !== 'movie') return
+    const kind = type === 'movies' || anime_type === 'movie' ? 'movie' : 'tv'
+    await getWatchOptions(kind, ids.tmdb).then(
+      (options) => (watchOptions.value = options),
+      warn('Where to watch is not available right now.'),
+    )
+  }
+
   async function loadEpisodes() {
     if (type === 'movies') return
     await getEpisodes(type, id).then(
@@ -54,7 +67,7 @@ export function useTitleDetail(type: MediaType, id: number, { withPeople = true 
       // Episodes first: the page needs both to offer actions.
       const [loaded] = await Promise.all([getDetail(type, id), loadEpisodes()])
       detail.value = loaded
-      if (withPeople) await loadExtras(loaded)
+      if (withPeople) await Promise.all([loadExtras(loaded), loadWatchOptions(loaded)])
     } catch (cause) {
       error.value = messageOf(cause)
     }
@@ -62,5 +75,5 @@ export function useTitleDetail(type: MediaType, id: number, { withPeople = true 
 
   onMounted(load)
 
-  return { detail, seasons, cast, anime, error, warnings, load }
+  return { detail, seasons, cast, anime, watchOptions, error, warnings, load }
 }

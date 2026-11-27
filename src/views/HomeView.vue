@@ -42,30 +42,30 @@ const summary = computed(() => {
   </main>
 
   <main v-else class="page guest">
-    <h1>Bingit</h1>
-    <p>Track it. Binge it. Sync it.</p>
-    <p class="muted">
-      A free, open-source tracker for movies, TV shows and anime. Your watchlist, history and
-      ratings stay in your Simkl account.
-    </p>
-    <ErrorNote v-if="auth.error" :message="auth.error" @retry="auth.signIn" />
-    <button
-      v-if="auth.status === 'signedOut'"
-      type="button"
-      class="button action"
-      @click="auth.signIn"
-    >
-      Sign in with Simkl
-    </button>
-    <MostWatched v-if="auth.status === 'signedOut'" is-guest />
+    <div class="guest__hero">
+      <div class="guest__brand">
+        <img src="/icons/icon.svg" alt="" width="64" height="64" />
+        <h1>Bingit</h1>
+      </div>
+      <p class="guest__tagline">Track it. Binge it. Sync it.</p>
+      <p class="muted">
+        Free, open-source tracker for movies, TV and anime. Your data stays on Simkl.
+      </p>
+      <ErrorNote v-if="auth.error" :message="auth.error" @retry="auth.signIn" />
+      <!-- Hidden, not removed, while the session is checked: nothing moves afterwards. -->
+      <div class="guest__actions" :class="{ 'guest__actions--waiting': auth.status === 'loading' }">
+        <button type="button" class="button" @click="auth.signIn">Sign in with Simkl</button>
+        <p class="muted">
+          No account?
+          <a href="https://simkl.com" target="_blank" rel="noopener">Create one on Simkl</a>
+        </p>
+      </div>
+    </div>
+    <MostWatched is-guest />
   </main>
 </template>
 
 <style scoped>
-.action {
-  align-self: flex-start;
-}
-
 .home {
   gap: var(--space-6);
 }
@@ -80,11 +80,65 @@ const summary = computed(() => {
   display: none;
 }
 
+/* Fills the screen: the posters sit at the bottom, the hero in the space above. */
 .guest {
+  flex: 1;
+  gap: var(--space-6);
+  width: 100%;
   max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+.guest__hero {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.guest__brand {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+/* Scales with the name beside it. */
+.guest__brand img {
+  width: var(--text-hero);
+  height: var(--text-hero);
+}
+
+.guest .guest__hero h1 {
+  font-size: var(--text-hero);
+}
+
+.guest__tagline {
+  white-space: nowrap;
+  font-size: var(--text-tagline);
+  font-weight: var(--weight-title);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-title);
+}
+
+.guest__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
+.guest__actions--waiting {
+  visibility: hidden;
 }
 
 @media (min-width: 64rem) {
+  .guest__actions {
+    align-items: flex-start;
+    text-align: start;
+  }
+
   .home {
     max-width: var(--content-max);
   }

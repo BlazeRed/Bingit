@@ -55,6 +55,9 @@ function signOut() {
 
     <section>
       <h2>About</h2>
+      <a class="me__tmdb" href="https://www.themoviedb.org" target="_blank" rel="noopener">
+        <img src="/tmdb.svg" alt="The Movie Database (TMDB)" width="123" height="16" />
+      </a>
       <p class="muted">
         Bingit <span class="mono">{{ version }}</span> · free and open source (<a
           href="https://github.com/BlazeRed/Bingit"
@@ -87,6 +90,10 @@ header {
   width: 3.5rem;
   height: 3.5rem;
   font-size: var(--text-lg);
+}
+
+.me__tmdb {
+  align-self: flex-start;
 }
 
 .me__signout {

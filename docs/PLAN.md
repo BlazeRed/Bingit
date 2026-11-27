@@ -93,7 +93,7 @@ netlify/functions/  tmdb proxy
 - Map via `ids.tmdb` from Simkl records; skip TMDB sections when missing (common for anime).
 - Used for: cast/crew, person pages, backdrops/logos, videos, watch providers.
 - Auth: TMDB v4 read access token stays server-side. `netlify/functions/tmdb.ts` adds it; it forwards only GET `movie|tv|person/{id}` (sub-resources via `append_to_response`) and caches responses on Netlify's CDN. A new TMDB endpoint needs a new allowed path. In dev, the Vite proxy does the same job (no allowlist).
-- Attribution: TMDB logo + "This product uses the TMDB API but is not endorsed or certified by TMDB." Watch providers require JustWatch attribution.
+- Attribution: TMDB logo + "This product uses the TMDB API but is not endorsed or certified by TMDB." Watch providers require JustWatch attribution. Country comes from the browser language; anime only when `anime_type` is TV or movie.
 
 ### AniList
 - GraphQL at `https://graphql.anilist.co`, no key for public reads, CORS enabled. Free for non-commercial use.
@@ -110,10 +110,10 @@ netlify/functions/  tmdb proxy
 
 | Route | Content | State |
 |---|---|---|
-| `/` (signed out) | Landing: what it is, sign in with Simkl, most watched on Simkl (titles open on simkl.com) | built |
+| `/` (signed out) | Landing: full-height; large name and tagline with sign in and "Create one on Simkl", most watched on Simkl pinned to the bottom (titles open on simkl.com) | built |
 | `/` (signed in) | Up next: continue watching, new this week (opens the calendar bottom sheet), most watched on Simkl this week. Layout: §8 | built |
 | `/library/:type?/:bucket?` | Library by type × bucket, sort, grid/list, title filter, mark next episode | built |
-| `/movie/:id`, `/tv/:id`, `/anime/:id` | Title page: art, info, ratings, status, your rating, mark watched, seasons/episodes, cast (TMDB) or characters/staff/relations (AniList), trailers, similar, "View on Simkl" | built; no watch providers yet |
+| `/movie/:id`, `/tv/:id`, `/anime/:id` | Title page: art, info, ratings, status, your rating, mark watched, seasons/episodes, cast (TMDB) or characters/staff/relations (AniList), trailers, similar, "View on Simkl" | built |
 | `/search` | Search as you type; with an empty box it shows discover. Layout: §8 | built |
 | `/person/:tmdbId` | TMDB person + roles; a role opens the Simkl title | built |
 | `/staff/:anilistId` | AniList staff / voice actor + roles; a role opens the Simkl title | built |
@@ -197,7 +197,7 @@ Profile, stats on demand, appearance (System / Light / Dark), sync (status, requ
 
 ### Title page
 
-Full-width backdrop (brand gradient when there is none) with a back button, overlapping poster, facts and scores; status select beside the progress bar; overview, your rating, episodes with the next one highlighted, one-row cast, links.
+Full-width backdrop (brand gradient when there is none) with a back button, overlapping poster, facts and scores; status select beside the progress bar; overview, your rating, episodes with the next one highlighted, where to watch (browser language country; not in the mock, added from §3), one-row cast, links.
 
 ### Quick add
 
@@ -214,7 +214,6 @@ Me shows an "Install" section (not in the mock) when the browser can install, or
 | Library | No filter, sort or grid controls | Kept: they are in §4 |
 | Status control | Custom button with chevron | Native select (same look, built-in keyboard and screen reader support) |
 | Me | No data section | "Your data": export and restore |
-| Me, About | — | TMDB logo not shown yet (their terms ask for it) |
 
 ## 9. Open items
 

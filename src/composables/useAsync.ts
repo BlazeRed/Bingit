@@ -4,8 +4,16 @@ import { SignedOutError } from '@/auth/session'
 import { messageOf } from '@/lib/errors'
 import { useAuthStore } from '@/stores/auth'
 
-/** Runs `load` whenever `source` changes. A late answer never replaces a newer one. */
-export function useAsync<S, T>(source: () => S, load: (value: S) => Promise<T>) {
+/**
+ * Runs `load` whenever `source` changes. A late answer never replaces a newer one.
+ * `keepPrevious` leaves the old data in place until the new data arrives: use it
+ * only when nothing on screen mixes that data with the new source.
+ */
+export function useAsync<S, T>(
+  source: () => S,
+  load: (value: S) => Promise<T>,
+  { keepPrevious = false } = {},
+) {
   const data = shallowRef<T>()
   const error = ref('')
   const isLoading = ref(false)
@@ -19,13 +27,17 @@ export function useAsync<S, T>(source: () => S, load: (value: S) => Promise<T>) 
       const run = ++latest
       isLoading.value = true
       error.value = ''
-      data.value = undefined
+      if (!keepPrevious) data.value = undefined
       try {
         const result = await load(value)
         if (run === latest) data.value = result
       } catch (cause) {
         if (cause instanceof SignedOutError) auth.expire(cause.message)
-        else if (run === latest) error.value = messageOf(cause)
+        else if (run === latest) {
+          // Old data must not pass for the new selection.
+          data.value = undefined
+          error.value = messageOf(cause)
+        }
       } finally {
         if (run === latest) isLoading.value = false
       }
