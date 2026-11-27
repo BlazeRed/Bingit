@@ -33,8 +33,12 @@ Status: **decided 2026-11-26**. Product and design decisions live in [PLAN.md](.
 | Screen / action | Data source | Quota cost |
 |---|---|---|
 | Up next · Continue watching | local mirror (`next_to_watch`, counts) | 0 |
-| Up next · New this week | calendar JSON ∩ library ids | 0 |
-| Up next · Most watched on Simkl | trending JSON (today/week/month × type) | 0 |
+| Up next · New this week + calendar sheet | calendar JSON ∩ library ids | 0 |
+| Up next · Most watched on Simkl | trending JSON (week × type) | 0 |
+| Up next · episode names and artwork | `GET /…/episodes/{id}` and details per card | 0 (edge-cached) |
+| Search · discover | trending + genre JSON | 0 |
+| Search · top rated, premieres | `GET /{tv,anime}/best`, `/premieres` | 1 per list per session |
+| Person role → title | `GET /search/id` (only if not in library) | 1, cached 7 days |
 | Library (all buckets) | local mirror | 0 |
 | Detail · metadata, episodes | `GET /tv|movies|anime/{id}`, `/…/episodes/{id}` | 0 (edge-cached) |
 | Detail · watched episodes | local mirror (`extended=full` keeps episode numbers for watching/plan/hold) | 0 |
@@ -56,16 +60,18 @@ Not possible with the API: social features (friends, comments, feed), push notif
 ## 4. Layers
 
 ```
-views/            route screens (Up next, Library, Detail, Search, Me)
-components/       UI built on Reka UI + tokens
-stores/ (Pinia)   auth · library · prefs        ← views read only from here
+views/            route screens (Up next, Library, Title, Search, Person, Staff)
+components/       UI parts on tokens; Reka UI where a primitive is needed (calendar sheet)
+composables/      useAsync: load on change, ignore late answers, handle a lost session
+stores/ (Pinia)   auth · library (mirror + pending changes)
+library/ home/ title/ discover/    pure logic, unit tested
 sync/             engine (activities gate, delta pull) · write-queue
-api/              simkl · tmdb · anilist · images  (thin typed fetch wrappers)
-db/               IndexedDB (idb-keyval): library mirror, snapshot, caches
+api/              thin typed fetch wrappers
+db/               capped response cache
 auth/             PKCE, token storage, refresh
 ```
 
-Rule: views never call `api/` for user data; they read stores. Catalog/TMDB/AniList reads go through one small `cachedFetch(key, ttl, loader)` helper backed by IndexedDB.
+Rule: user data (library, status, ratings) is read from the stores only. Public data (catalog, trending, calendar, people) is loaded by `api/` functions through `useAsync`; slow-changing responses go through `cachedFetch(key, ttl, loader)` in IndexedDB.
 
 ## 5. Auth flow (AUTH V2, PKCE, public client)
 
@@ -81,47 +87,66 @@ Redirect URIs to register: `http://localhost/callback` (loopback: port ignored) 
 
 ## 6. Sync engine
 
-- **Initial**: snapshot `/sync/activities` → `/sync/all-items/shows?extended=full`, then `movies`, then `anime` (sequential) → write mirror → save snapshot. Show progress ("Importing your library…").
-- **Incremental**: on app start, tab focus (min 5 min apart), and after our own writes: `/sync/activities`; unchanged `all` → stop; else pull only changed types with `date_from`.
-- **Deletions**: once a day, `extended=simkl_ids_only` diff per type.
-- **Multi-tab**: Web Locks API (`navigator.locks.request('sync', …)`) so only one tab syncs; `BroadcastChannel` tells other tabs to reload the store. Both native, no library.
+Code: `src/sync/engine.ts`.
+
+- **Initial**: snapshot `/sync/activities` → `/sync/all-items/shows?extended=full`, then `movies`, then `anime` (sequential). Show progress ("Importing your TV shows…").
+- **Incremental**: on app start, tab focus (min 5 min apart), "Sync now", and (M3) after our own writes: `/sync/activities`; unchanged `all` → stop. Else, per moved timestamp: statuses → one `/sync/all-items?date_from=…&extended=full`; `rated_at` → `/sync/ratings?date_from=…` (rating changes are not in the item delta); `removed_from_list` → `/sync/all-items?extended=simkl_ids_only` and delete what is missing.
+- **Atomic save**: items and snapshot are one IndexedDB record, written only when every request succeeded. A schema `version` forces a re-import.
+- **Multi-tab**: Web Locks (`bingit-sync`) so one tab syncs at a time; `BroadcastChannel` tells other tabs to reload. Sign-in and sign-out take the same lock. Both native, no library.
+- **Episodes**: `extended=full` gives watched episode numbers for watching, plan to watch and on hold. Completed and dropped titles have none.
 
 ## 7. Write queue
 
-- Every action updates the store first (optimistic), then enqueues.
-- Queue merges pending ops per endpoint into one array body, sends ≤1 POST/s, retries 429/5xx with backoff (`Retry-After` when present).
-- Hard failure → roll back that item + toast with Retry.
-- **Offline writes (decided):** the queue is persisted in IndexedDB. Marks made offline are sent when `online` fires or on next start, oldest first; items show a small "pending" state until sent.
+Code: `src/sync/write-queue.ts`, `src/library/ops.ts`.
+
+- A user action is stored as a change in IndexedDB. The UI shows the saved library with all pending changes applied on top (optimistic). Applying a change twice gives the same result.
+- The queue sends changes in order. The leading changes for one endpoint become one body (episodes of one show are joined). ≤1 POST/s, one sender at a time (Web Lock). Taps within 1.5 s share a request.
+- Success → the change is written into the saved library, removed from the queue, then a delta sync fetches what Simkl made of it.
+- Network errors, 429, 5xx, 401, 412 → keep and retry with backoff (`Retry-After` when present). Any other error or `not_found` → drop the change (that rolls it back) and show a message with Retry.
+- **Offline writes (decided):** marks made offline are sent when `online` fires or on next start, oldest first; the title page shows "Waiting to send". Sign-out warns before it discards unsent changes. If a session expires, the next sign-in discards them.
+- An empty episode list is never sent: Simkl reads it as "the whole show".
+- Completed titles have no synced episode list: all aired episodes count as watched. Dropped titles show no episode history.
 
 ## 8. Caching (IndexedDB)
 
 | Data | TTL | Why |
 |---|---|---|
 | Library mirror + snapshot | until next delta | source of truth for UI |
-| Simkl catalog details / episodes | 7 days | free but avoids latency |
+| Simkl catalog details / episodes | 6 hours | free; episode lists change when episodes air |
 | Trending / calendar JSON | browser HTTP cache (`no-cache` revalidate) | Simkl's own guidance |
-| TMDB / AniList responses | 7 days | stable data, AniList limit |
+| TMDB / AniList responses | 7 days (AniList 6 hours: next airing episode) | stable data, AniList limit |
 | Search results | memory only, session | cheap to redo, no stale results |
 
 ### Storage limits
 
 - **Library mirror: no cap.** It is the source of truth; capping it would break the app. Store only the fields the UI reads (ids, title, year, poster path, status, counts, `next_to_watch`, rating, watched episode numbers), not whole API responses. Estimate: ~1–3 KB per title → 1,000 titles ≈ 1–3 MB, 5,000 ≈ 5–15 MB.
 - **Response cache (catalog, TMDB, AniList): capped.** Separate IndexedDB store. Each entry keeps `savedAt`; on app start delete entries past TTL, then if more than **500 entries** delete the oldest. ~5–15 MB worst case.
-- **Images: not stored by us.** Browser HTTP cache manages them (a service worker cache, if added with the PWA, gets its own cap).
+- **Images: not stored by us.** Browser HTTP cache manages them. The service worker does not cache them: cross-origin images would be opaque responses, which Chrome counts as several MB each against the storage quota.
 - **Write queue, tokens, prefs:** a few KB.
 - Call `navigator.storage.persist()` after sign-in so Chrome/Firefox don't evict data under disk pressure.
 - **Safari:** deletes all site storage after 7 days without a visit unless the site is installed to the home screen. Effect: re-login + re-import after a week away. Mitigation: suggest "Add to Home Screen" (PWA, M6).
-- **Me page:** show usage from `navigator.storage.estimate()` and a "Clear cached data" button (keeps sign-in and library; "Clear saved data" removes everything).
+- **Me page:** shows usage from `navigator.storage.estimate()`. "Clear saved data" deletes the library mirror and the response cache, then imports again; sign-in and unsent changes stay. Sign out removes everything.
+
+### Service worker
+
+Generated by `vite-plugin-pwa` (Workbox) at build time; not active in `npm run dev`.
+
+- Precaches the app shell only (HTML, JS, CSS, fonts, icons, about 450 KB), so the app starts offline and reads the library from IndexedDB.
+- No runtime caching: API data stays under the app's own rules. Page requests fall back to `index.html`, except `/api/`.
+- A new version waits until the user taps "Reload". An open app looks for updates when it becomes visible again.
 
 ## 9. Search
 
-**Decided: search as you type**, debounced 400 ms, min 3 chars, one request in flight (abort the previous), results cached per query for the session. ~2–4 requests per search.
+**Decided: search as you type**, debounced 400 ms, min 3 chars, one request in flight (abort the previous), results cached per query for the session. ~2–4 requests per search. `/` opens search.
+
+Other discovery costs: trending, genre and calendar files are free. Top rated and premieres cost one request per list per session. A TMDB or AniList link (`/find/...`) uses the library when it can, else one `/search/id` request, cached 7 days.
 
 ## 10. Errors and limits in the UI
 
-- 429 on GET → wait and retry; 429 on POST → queue backs off.
-- Quota: read `X-RateLimit-*` headers, show usage on Me; under 10% left → pause background sync, keep user actions.
-- Offline → banner, reads from mirror, writes queued.
+- Failed loads show a plain message and "Try again". A failed sync retries on the next trigger. A 429 on a write makes the queue wait.
+- Quota: `X-RateLimit-*` headers are saved and shown on Me; the reset is midnight US Eastern. Under 10% left, background sync checks pause; user actions and "Sync now" continue.
+- Offline → banner, reads from the mirror, writes queued.
+- Accessibility: skip link, focus moves to the content on page change, page titles, checked with axe-core (WCAG 2.1 AA) in both themes.
 
 ## 11. Types
 
@@ -136,9 +161,9 @@ Redirect URIs to register: `http://localhost/callback` (loopback: port ignored) 
 
 ## 13. Import / export
 
-Simkl has no "download my data" or "upload a file" endpoint, and Bingit has no backend. Both features run in the browser:
+Simkl has no "download my data" or "upload a file" endpoint, and Bingit has no backend. Both features run in the browser (`src/backup/`).
 
-- **Export:** build a file from the library mirror and download it with a `Blob` + `<a download>`. For a complete backup, first refresh with `extended=full&include_all_episodes=yes&episode_watched_at=yes` (3 requests, one per type). Formats: Bingit JSON (lossless: all ids, statuses, ratings, per-episode dates) and CSV (one row per title, for spreadsheets).
-- **Import:** parse the file locally → preview (counts, unmatched rows) → send through the write queue in batches: `/sync/add-to-list` for watchlist/status, `/sync/history` with `watched_at` for watch events, `/sync/ratings` for ratings. Simkl resolves imdb/tmdb/tvdb/mal/anilist ids server-side and reports `not_found`. Import never deletes anything.
-- **Scope:** v1 (M5) = export JSON + CSV, restore from Bingit JSON. M6 = importers for IMDb CSV, Letterboxd CSV (title + year only, fuzzy), Trakt JSON, MAL XML.
-- **Cost:** ~1 request per 100 items, sent at ≤1 POST/s.
+- **Export:** reads the library from Simkl with `extended=full&include_all_episodes=yes&episode_watched_at=yes` (3 requests, one per type) and downloads it. Bingit JSON: ids, status, rating and date, per-episode watch dates. CSV: one row per title; cells that a spreadsheet would run as a formula are escaped.
+- **Restore:** the file is validated field by field → preview with counts → changes go through the write queue: history first (`/sync/history` with `watched_at`), then status (`/sync/add-to-list`), then ratings. About one request per 100 titles for each. Restore never removes anything.
+- **Limits:** a very large library can exceed Simkl's `max_items` on export. Restore keeps only Simkl ids.
+- **M6:** importers for IMDb CSV, Letterboxd CSV (title + year only, fuzzy), Trakt JSON, MAL XML.

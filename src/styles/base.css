@@ -63,6 +63,107 @@ textarea {
   outline-offset: 2px;
 }
 
+/* Library table: title, progress, next episode, rating. */
+:root {
+  --table-columns: minmax(0, 1fr) 7rem 5rem 3.5rem;
+  --table-action: 5rem;
+}
+
+/* ---- Shared page parts ---- */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 48rem;
+  padding: var(--space-6) var(--space-5);
+}
+
+.page h1 {
+  font-size: var(--text-xl);
+}
+
+.page h2 {
+  font-size: var(--text-md);
+}
+
+@media (min-width: 64rem) {
+  /* Pages sit in the middle of the space beside the sidebar. */
+  .page {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  /* A card list in columns: one card per entry. */
+  .card-list.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    gap: var(--space-3);
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .card-list.card-grid > li {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+  }
+}
+
+/* Title and controls that stay on top while the list scrolls. */
+.pinned {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  /* Full width, so rows do not show at the sides while they scroll under. */
+  margin-inline: calc(-1 * var(--space-5));
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  background: var(--color-bg);
+}
+
+.muted {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.card-list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  list-style: none;
+}
+
+.field {
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--color-wash);
+  color: var(--color-on-wash);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
 .button {
   min-height: var(--tap-min);
   padding: 0 var(--space-5);
@@ -72,6 +173,116 @@ textarea {
   color: var(--color-on-action);
   font-weight: var(--weight-semibold);
   cursor: pointer;
+}
+
+.button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.button--danger {
+  background: var(--color-danger);
+  color: var(--color-bg);
+}
+
+.button--danger-outline {
+  display: inline-flex;
+  gap: var(--space-2);
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+/* The library status in the side panel; opens the status sheet. */
+.status-badge {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-wash);
+  color: var(--color-on-wash);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* Underlined tabs (Reka Tabs). */
+.tabs {
+  display: flex;
+  column-gap: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabs button {
+  display: flex;
+  /* The smaller count shares the baseline of the label. `wrap` lets the line be centered. */
+  flex-wrap: wrap;
+  place-content: center;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.tabs button[data-state='active'] {
+  border-bottom-color: var(--color-action);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+/* A section action or an external link: icon and text, no underline. */
+.action-link {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-link);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  cursor: pointer;
+}
+
+.icon-button[aria-pressed='true'] {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 code,

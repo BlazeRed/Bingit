@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { simklUser } from '@/api/simkl'
+import { fakeLocks } from './fake-locks'
 import { completeSignIn, createAuthorizeUrl, getAccessToken, hasSession, signOut } from '../session'
 
 const db = new Map<string, unknown>()
@@ -23,18 +24,6 @@ const tokens = (accessToken: string) =>
   })
 const storeSession = (accessToken: string, expiresAt = Date.now() + 3_600_000) =>
   db.set('session', { accessToken, refreshToken: 'refresh', expiresAt })
-
-/** Serialises callbacks like the browser Web Locks API, which jsdom lacks. */
-function fakeLocks() {
-  let queue: Promise<unknown> = Promise.resolve()
-  return {
-    request: (_name: string, task: () => Promise<unknown>) => {
-      const result = queue.then(task)
-      queue = result.catch(() => undefined)
-      return result
-    },
-  }
-}
 
 beforeEach(() => {
   db.clear()

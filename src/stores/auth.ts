@@ -1,16 +1,19 @@
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { get, set } from 'idb-keyval'
 
 import { getUserSettings } from '@/api/simkl'
 import type { SimklUserSettings } from '@/api/simkl-types'
 import * as session from '@/auth/session'
+import { clearCache } from '@/db/cache'
+import { messageOf } from '@/lib/errors'
 
 const USER_KEY = 'user'
 
 export const useAuthStore = defineStore('auth', () => {
   const status = ref<'loading' | 'signedOut' | 'signedIn'>('loading')
   const userName = ref('')
+  const account = shallowRef<SimklUserSettings['account']>()
   const error = ref('')
 
   async function loadUser() {
@@ -21,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
       await set(USER_KEY, settings)
     }
     userName.value = settings.user.name
+    account.value = settings.account
   }
 
   async function restore() {
@@ -64,14 +68,20 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function signOut() {
     await session.signOut()
+    await clearCache()
     userName.value = ''
+    account.value = undefined
     error.value = ''
     status.value = 'signedOut'
   }
 
-  return { status, userName, error, restore, signIn, completeSignIn, signOut }
-})
+  /** The session ended outside this store (revoked or expired grant). */
+  function expire(message: string) {
+    userName.value = ''
+    account.value = undefined
+    error.value = message
+    status.value = 'signedOut'
+  }
 
-function messageOf(cause: unknown): string {
-  return cause instanceof Error ? cause.message : 'Something went wrong.'
-}
+  return { status, userName, account, error, restore, signIn, completeSignIn, signOut, expire }
+})

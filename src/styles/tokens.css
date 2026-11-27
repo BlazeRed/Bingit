@@ -15,15 +15,14 @@
   --color-bg: #f7f1f4;
   --color-surface: #fffbfc;
   --color-surface-sunken: #eee3e9; /* segmented controls, tracks behind tabs */
-  --color-surface-raised: #fffbfc; /* selected segment */
   --color-border: #e6d6df;
   --color-border-subtle: #f1e7ec; /* row separators, stat tiles */
   --color-text: #21101a;
   --color-text-muted: #705a67;
   --color-action: #4b1d3f; /* mulberry: primary buttons, active nav, checks */
   --color-on-action: #ffffff;
-  --color-wash: #f6e3e5; /* velvet rose wash: status badge, selected row */
-  --color-on-wash: #7e3440;
+  --color-wash: var(--color-highlight); /* status badge, selected row */
+  --color-on-wash: var(--color-on-highlight);
   --color-highlight: #fdeee6; /* apricot wash: next episode, ratings */
   --color-on-highlight: #8a3a1c;
   --color-progress: #c97b84;
@@ -31,6 +30,11 @@
   --color-link: #4b1d3f;
   --color-danger: #b42318;
   --color-focus: #4b1d3f;
+  /* App icon on the page. The installed icon and favicon stay mulberry. */
+  --color-logo-bg: #4b1d3f;
+  --color-logo-play: #f4a988;
+  --color-logo-track: #7a4656;
+  --color-logo-bar: #c97b84;
   --shadow-raised: 0 1px 2px rgb(33 16 26 / 0.08);
 
   /* Brand source colors, for artwork fallbacks and gradients only */
@@ -52,6 +56,8 @@
   --text-lg: 1.375rem; /* 22px panel titles */
   --text-xl: 1.625rem; /* 26px page titles */
   --text-2xl: 1.75rem; /* 28px big numbers */
+  --text-tagline: clamp(1.25rem, 7.4vw, 2.5rem); /* landing page, fits one line */
+  --text-hero: clamp(3.5rem, 2rem + 6.5vw, 5rem); /* landing page */
 
   --weight-regular: 400;
   --weight-medium: 500;
@@ -85,9 +91,9 @@
   --tap-min: 44px;
   --control-h: 40px;
   --nav-h: 76px; /* mobile bottom nav, plus safe-area inset */
-  --sidebar-w: 232px;
+  --sidebar-w: 200px;
   --panel-w: 420px;
-  --content-max: 72rem;
+  --content-max: 80rem;
   --poster-list-w: 44px; /* 2:3 */
   --poster-card-w: 112px;
 
@@ -103,15 +109,12 @@
     --color-bg: #1c0f17;
     --color-surface: #27151f;
     --color-surface-sunken: #321e2a;
-    --color-surface-raised: #4a2f3f;
     --color-border: #40283a;
     --color-border-subtle: #321e2a;
     --color-text: #f6ecf1;
     --color-text-muted: #bfa4b4;
     --color-action: #f4a988; /* apricot: mulberry is too dark to act on here */
     --color-on-action: #3a1420;
-    --color-wash: #3a2229;
-    --color-on-wash: #e6a9b0;
     --color-highlight: #3a2621;
     --color-on-highlight: #f4a988;
     --color-progress: #c97b84;
@@ -119,6 +122,10 @@
     --color-link: #f4a988;
     --color-danger: #f97066;
     --color-focus: #f4a988;
+    --color-logo-bg: #f4a988;
+    --color-logo-play: #4b1d3f;
+    --color-logo-track: #d98f7c;
+    --color-logo-bar: #8a3f5c;
     --shadow-raised: none;
     color-scheme: dark;
   }
@@ -128,15 +135,12 @@
   --color-bg: #1c0f17;
   --color-surface: #27151f;
   --color-surface-sunken: #321e2a;
-  --color-surface-raised: #4a2f3f;
   --color-border: #40283a;
   --color-border-subtle: #321e2a;
   --color-text: #f6ecf1;
   --color-text-muted: #bfa4b4;
   --color-action: #f4a988;
   --color-on-action: #3a1420;
-  --color-wash: #3a2229;
-  --color-on-wash: #e6a9b0;
   --color-highlight: #3a2621;
   --color-on-highlight: #f4a988;
   --color-progress: #c97b84;
@@ -144,6 +148,10 @@
   --color-link: #f4a988;
   --color-danger: #f97066;
   --color-focus: #f4a988;
+  --color-logo-bg: #f4a988;
+  --color-logo-play: #4b1d3f;
+  --color-logo-track: #d98f7c;
+  --color-logo-bar: #8a3f5c;
   --shadow-raised: none;
   color-scheme: dark;
 }
