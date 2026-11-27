@@ -107,7 +107,10 @@ onUnmounted(() => {
     <div id="content" ref="content" tabindex="-1">
       <!-- Detail pages are rebuilt per title or person; other views keep their state. -->
       <RouterView v-slot="{ Component }">
-        <component :is="Component" :key="route.meta.perPath ? route.path : route.name" />
+        <!-- Search keeps its filters and results while a title is open. -->
+        <KeepAlive :include="auth.status === 'signedIn' ? ['SearchView'] : []">
+          <component :is="Component" :key="route.meta.perPath ? route.path : route.name" />
+        </KeepAlive>
       </RouterView>
     </div>
 

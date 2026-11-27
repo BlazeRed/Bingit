@@ -46,6 +46,11 @@ const meta = computed(() => {
         {{ card.title }}
       </RouterLink>
       <span class="muted">{{ meta }}</span>
+      <span v-if="card.rating" class="row__rating mono">
+        <span aria-hidden="true">★</span>
+        <span class="visually-hidden">Simkl rating</span>
+        {{ card.rating.toFixed(1) }}
+      </span>
       <span v-if="note" class="muted mono">{{ note }}</span>
     </div>
 
@@ -55,8 +60,7 @@ const meta = computed(() => {
       <button
         v-else
         type="button"
-        class="field"
-        :class="{ row__status: isJustAdded }"
+        :class="isJustAdded ? 'row__status' : 'button row__add'"
         :aria-label="
           isJustAdded
             ? `Remove ${card.title} from your watchlist`
@@ -108,6 +112,19 @@ const meta = computed(() => {
   text-decoration: none;
 }
 
+.row__rating {
+  align-self: flex-start;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-highlight);
+  color: var(--color-on-highlight);
+  font-size: var(--text-xs);
+}
+
+.row__add {
+  padding: 0 var(--space-4);
+}
+
 .row__status {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -118,6 +135,7 @@ const meta = computed(() => {
 }
 
 button {
+  border: 0;
   cursor: pointer;
   white-space: nowrap;
 }

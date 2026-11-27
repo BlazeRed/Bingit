@@ -2,7 +2,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { TabsContent, TabsRoot } from 'reka-ui'
-import { Archive } from '@lucide/vue'
+import { Archive, ArrowDownAZ, LayoutGrid, List } from '@lucide/vue'
 
 import BottomSheet from '@/components/BottomSheet.vue'
 import ErrorNote from '@/components/ErrorNote.vue'
@@ -77,7 +77,7 @@ watch(layout, (value) => localStorage.setItem('bingit-layout', value))
         :model-value="selection.bucket"
         @update:model-value="show(selection.type, $event as Bucket)"
       >
-        <div class="library__header">
+        <div class="pinned library__header">
           <div class="library__bar">
             <h1>Library</h1>
             <LibraryFilters v-model:sort="sort" v-model:layout="layout" />
@@ -128,7 +128,23 @@ watch(layout, (value) => localStorage.setItem('bingit-layout', value))
       close-label="Close archive"
     >
       <template #actions>
-        <LibraryFilters v-model:sort="sort" v-model:layout="layout" />
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Sort by title"
+          :aria-pressed="sort === 'title'"
+          @click="sort = sort === 'title' ? DEFAULT_SORT : 'title'"
+        >
+          <ArrowDownAZ :size="20" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="icon-button"
+          :aria-label="layout === 'list' ? 'Show as grid' : 'Show as list'"
+          @click="layout = layout === 'list' ? 'grid' : 'list'"
+        >
+          <component :is="layout === 'list' ? LayoutGrid : List" :size="20" aria-hidden="true" />
+        </button>
       </template>
       <div class="sheet__search">
         <SearchField
@@ -178,17 +194,9 @@ watch(layout, (value) => localStorage.setItem('bingit-layout', value))
   gap: var(--space-3);
 }
 
+/* The tabs' line closes the header. */
 .library__header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  /* Full width, so rows do not show at the sides while they scroll under. */
-  margin-inline: calc(-1 * var(--space-5));
-  padding: var(--space-4) var(--space-5) 0;
-  background: var(--color-bg);
+  padding-bottom: 0;
 }
 
 .library__bar {

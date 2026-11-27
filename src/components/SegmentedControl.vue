@@ -45,9 +45,9 @@ button {
 }
 
 button[data-state='on'] {
-  background: var(--color-surface-raised);
+  background: var(--color-action);
   box-shadow: var(--shadow-raised);
-  color: var(--color-text);
+  color: var(--color-on-action);
   font-weight: var(--weight-semibold);
 }
 </style>

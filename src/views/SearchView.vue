@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, onActivated, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { searchTitles, type Card, type SearchScope } from '@/api/discover'
@@ -54,13 +54,19 @@ async function search(text: string) {
   isSearching.value = false
 }
 
+const syncUrl = () =>
+  router.replace({ query: { q: query.value.trim() || undefined, type: scope.value } })
+
+// The page is kept alive: a plain link to it must not leave the URL behind.
+onActivated(syncUrl)
+
 watch(
   [query, scope],
   () => {
     cancel()
     error.value = ''
     const text = query.value.trim()
-    void router.replace({ query: { q: text || undefined, type: scope.value } })
+    void syncUrl()
     isSearching.value = text.length >= MIN_LENGTH
     if (!isSearching.value) results.value = undefined
     else timer = setTimeout(() => void search(text), DEBOUNCE_MS)
@@ -72,17 +78,20 @@ onUnmounted(cancel)
 </script>
 
 <template>
-  <main class="page">
-    <h1>Search</h1>
-    <SearchField
-      id="search-input"
-      v-model="query"
-      aria-label="Search titles"
-      placeholder="Search movies, TV, anime"
-    />
+  <main class="page search">
+    <!-- Hidden, not removed: the chosen list survives a search. -->
+    <DiscoverPanel :hidden="isActive">
+      <h1>Search</h1>
+      <SearchField
+        id="search-input"
+        v-model="query"
+        aria-label="Search titles"
+        placeholder="Search movies, TV, anime"
+      />
+      <SegmentedControl v-if="isActive" v-model="scope" :options="SCOPES" label="Search in" />
+    </DiscoverPanel>
 
     <template v-if="isActive">
-      <SegmentedControl v-model="scope" :options="SCOPES" label="Search in" />
       <p v-if="error" class="error" role="alert">{{ error }}</p>
       <p v-else-if="isSearching" class="muted" role="status">Searching…</p>
       <p v-else-if="!results" class="muted">Type at least {{ MIN_LENGTH }} characters.</p>
@@ -93,8 +102,12 @@ onUnmounted(cancel)
         <TitleRow v-for="card in results" :key="card.id" :card="card" />
       </ul>
     </template>
-
-    <!-- Hidden, not removed: the chosen list survives a search. -->
-    <DiscoverPanel v-show="!isActive" />
   </main>
 </template>
+
+<style scoped>
+/* The pinned header brings its own top space. */
+.search {
+  padding-top: 0;
+}
+</style>

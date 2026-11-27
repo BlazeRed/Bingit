@@ -157,13 +157,13 @@ Later (PRO/VIP-gated on Simkl): custom lists, favorites, rewatches. Shown only w
 
 ## 8. Design and screen layout
 
-Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
+Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes"). Search discover: https://claude.ai/artifact/X8t527FaAqAAEdutUP7aEs (artboard H; it wins over the older mock).
 
 - Mobile-first, usable on desktop. Tracking-first, not browse-first.
 - Core flow: search → add to Watchlist; mark episode / season / "up to here"; rating 1–10.
 - Nav: Up next · Library · Search · Me. Library = category (Movies / TV / Anime) × bucket (Watchlist / Watching); Seen, Paused and Dropped are the archive. Movies have no Watching or Paused bucket, so Seen is a main tab for them.
 - Style: "Calm" — light + dark themes, list-first, small artwork; detail page gets a backdrop band.
-- Palette: "Combination" — mulberry #4B1D3F (light-mode action), apricot #F4A988 (dark-mode action, next-episode/rating highlight), velvet rose #C97B84 (progress, status). Neutrals tinted toward mulberry.
+- Palette: "Combination" — mulberry #4B1D3F (light-mode action), apricot #F4A988 (dark-mode action, and the light tint: next episode, ratings, status, filter buttons), velvet rose #C97B84 (progress). The chosen segment of a segmented control and "+ Add" use the action color. Neutrals tinted toward mulberry.
 - Font: Geist (UI) + Geist Mono (episode codes, runtimes, ratings), self-hosted via `@fontsource-variable` (no Google Fonts request).
 - Tokens: `src/styles/tokens.css` (semantic color, type, spacing, radius, sizes, motion; light + dark).
 - Me: profile + link to Simkl, export (Bingit JSON + CSV) and restore from Bingit JSON (details: ARCHITECTURE.md §13), stats on demand ("Load my stats" — expensive call), theme System/Light/Dark, sync status + Sync now, Simkl requests used today (from `X-RateLimit-*` headers), clear local data, about/attribution, sign out.
@@ -182,7 +182,9 @@ Desktop: two columns. Left: continue watching as landscape cards, 3 per row, the
 
 ### Search (`/search`)
 
-- Empty box → **discover**: category, list (trending today / week / month; top rated, new premieres, coming soon for TV and anime), genre; rows with quick add.
+- Empty box → **discover**: category, then two filter buttons, each opening a bottom sheet: list (trending today / week / month; top rated, new premieres, coming soon for TV and anime) and genre (with a text filter). Both apply together; for today and this week the genre is picked from the 500 most watched. Rows: rating, quick add.
+- Title, search field, category and filter buttons stay pinned at the top, as in Library.
+- Opening a title and going back keeps filters, results and scroll (the page is kept alive until sign-out; a reload resets the discover filters).
 - Typing → results with All / Movies / TV / Anime filter (from 3 characters). The URL keeps the search. `/` or the desktop top bar focuses it from anywhere.
 
 ### Navigation
@@ -191,11 +193,11 @@ Up next · Library · Search · Me. On desktop, every page except Search has a s
 
 ### Library
 
-Title, category, title filter and status tabs stay pinned at the top. Two icon buttons in the title bar: filters (popover with sort, list or grid, and a reset button) and archive (bottom sheet with Seen / Paused / Dropped tabs, Dropped only for movies and its own title filter; `?archive=` keeps it open after "back"). Default sort: recently watched, then recently added.
+Title, category, title filter and status tabs stay pinned at the top. Two icon buttons in the title bar: filters (bottom sheet with sort, list or grid, and a reset button) and archive (bottom sheet with Seen / Paused / Dropped tabs, Dropped only for movies, its own title filter, and two buttons: sort by title, list or grid; `?archive=` keeps it open after "back"). Default sort: recently watched, then recently added.
 
 ### Controls
 
-Use the Reka UI primitive when one exists (Drawer, Select, Tabs, ToggleGroup, Popover, Checkbox) and style it with tokens. Reka has no plain text input: use the native one.
+Use the Reka UI primitive when one exists (Drawer, Tabs, ToggleGroup, Checkbox) and style it with tokens. Reka has no plain text input: use the native one.
 
 ### Library on desktop
 

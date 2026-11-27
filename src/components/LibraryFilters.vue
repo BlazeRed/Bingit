@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
+import { computed, ref } from 'vue'
 import { RotateCcw, SlidersHorizontal } from '@lucide/vue'
 
-import AppSelect from './AppSelect.vue'
+import BottomSheet from './BottomSheet.vue'
+import ChoiceList from './ChoiceList.vue'
 import SegmentedControl from './SegmentedControl.vue'
 import { DEFAULT_SORT, SORTS, type Layout, type SortKey } from '@/library/browse'
 
@@ -17,55 +17,69 @@ function reset() {
   layout.value = 'list'
 }
 
+const isOpen = ref(false)
+
 const sortGroups = [
-  { options: Object.entries(SORTS).map(([value, { label }]) => ({ value, label })) },
+  {
+    label: 'Sort by',
+    options: Object.entries(SORTS).map(([value, { label }]) => ({ value, label })),
+  },
 ]
 const LAYOUTS: Record<Layout, string> = { list: 'List', grid: 'Grid' }
 </script>
 
 <template>
-  <PopoverRoot>
-    <PopoverTrigger class="icon-button" aria-label="Filters">
-      <SlidersHorizontal :size="20" aria-hidden="true" />
-    </PopoverTrigger>
-    <PopoverPortal>
-      <PopoverContent class="popup filters" align="end" :side-offset="8" :collision-padding="12">
-        <AppSelect
-          :model-value="sort"
-          :groups="sortGroups"
-          aria-label="Sort by"
-          @update:model-value="sort = $event as SortKey"
-        />
-        <SegmentedControl v-model="layout" :options="LAYOUTS" label="Layout" />
-        <button
-          type="button"
-          class="action-link filters__reset"
-          :disabled="isDefault"
-          @click="reset"
-        >
-          <RotateCcw :size="16" aria-hidden="true" />
-          Reset filters
-        </button>
-      </PopoverContent>
-    </PopoverPortal>
-  </PopoverRoot>
+  <button
+    type="button"
+    class="icon-button"
+    aria-label="Filters"
+    aria-haspopup="dialog"
+    @click="isOpen = true"
+  >
+    <SlidersHorizontal :size="20" aria-hidden="true" />
+  </button>
+  <BottomSheet
+    v-model:open="isOpen"
+    title="Filters"
+    description="Sort order and layout of your titles."
+    close-label="Close filters"
+    fit
+  >
+    <div class="library-filters">
+      <ChoiceList
+        :model-value="sort"
+        :groups="sortGroups"
+        label="Sort by"
+        @update:model-value="sort = $event as SortKey"
+      />
+      <SegmentedControl v-model="layout" :options="LAYOUTS" label="Layout" />
+      <button
+        type="button"
+        class="action-link library-filters__reset"
+        :disabled="isDefault"
+        @click="reset"
+      >
+        <RotateCcw :size="16" aria-hidden="true" />
+        Reset filters
+      </button>
+    </div>
+  </BottomSheet>
 </template>
 
-<!-- Not scoped: the panel is rendered in <body>. -->
+<!-- Not scoped: the sheet is rendered in <body>. -->
 <style>
-.filters {
+.library-filters {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  width: min(20rem, calc(100vw - 2 * var(--space-5)));
-  padding: var(--space-3);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom));
 }
 
-.filters__reset {
+.library-filters__reset {
   align-self: center;
 }
 
-.filters__reset:disabled {
+.library-filters__reset:disabled {
   opacity: 0.5;
   cursor: default;
 }

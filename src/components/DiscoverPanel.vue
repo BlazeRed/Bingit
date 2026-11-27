@@ -2,13 +2,18 @@
 import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 
-import { getBrowse, getGenreTrending, getGenres, getTrending } from '@/api/discover'
-import AppSelect from '@/components/AppSelect.vue'
+import { Compass, Tag, TrendingUp } from '@lucide/vue'
+
+import { getBrowse, getGenres, getTrending } from '@/api/discover'
+import FilterSheet from '@/components/FilterSheet.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import TitleRow from '@/components/TitleRow.vue'
 import { useAsync } from '@/composables/useAsync'
 import { TYPES } from '@/library/browse'
 import type { MediaType } from '@/library/item'
+
+/** `hidden` leaves only the pinned header, with what the page puts in it. */
+defineProps<{ hidden?: boolean }>()
 
 const PAGE = 30
 
@@ -40,29 +45,48 @@ watch(type, (value) => {
 watch([type, list, genre], () => (shown.value = PAGE))
 
 const { data: genres } = useAsync(() => type.value, getGenres)
+const chosenGenre = computed(() => genres.value?.find((g) => g.slug === genre.value))
+const genreName = computed(() => chosenGenre.value?.name ?? '')
 
-const selection = computed(() => `${type.value}|${list.value}|${genre.value}`)
+// Browse lists hold every genre, so only a trending list is loaded again for one.
+const selection = computed(
+  () => `${type.value}|${list.value}|${isBrowse(list.value) ? '' : genre.value}`,
+)
 const {
-  data: cards,
+  data: loaded,
   error,
   isLoading,
   retry,
 } = useAsync(
   () => selection.value,
   () => {
-    if (genre.value) return getGenreTrending(type.value, genre.value)
-    if (!isBrowse(list.value)) return getTrending(type.value, list.value)
+    if (!isBrowse(list.value)) return getTrending(type.value, list.value, chosenGenre.value)
     return getBrowse(type.value === 'anime' ? 'anime' : 'tv', list.value)
   },
 )
 
+const isBrowseByGenre = computed(() => isBrowse(list.value) && genre.value !== '')
+const hasNoGenres = computed(
+  () =>
+    isBrowseByGenre.value && Boolean(loaded.value?.length) && !loaded.value?.some((c) => c.genres),
+)
+const cards = computed(() =>
+  isBrowseByGenre.value
+    ? loaded.value?.filter((c) => c.genres?.includes(genreName.value))
+    : loaded.value,
+)
+const emptyMessage = computed(() => {
+  if (hasNoGenres.value) return 'Simkl sends no genres for this list. Choose a trending list.'
+  if (!genre.value) return 'Nothing here right now.'
+  const hint = list.value === 'today' || list.value === 'week' ? ' Try “This month”.' : ''
+  return `No ${genreName.value} title in this list.${hint}`
+})
+
 const heading = computed(() => {
-  if (genre.value) {
-    const name = genres.value?.find((g) => g.slug === genre.value)?.name ?? genre.value
-    return `Trending ${name} on Simkl this month`
-  }
-  if (isBrowse(list.value)) return `${BROWSE[list.value]} on Simkl`
-  return `Trending on Simkl ${TRENDING[list.value].toLowerCase()}`
+  const name = isBrowse(list.value)
+    ? `${BROWSE[list.value]} on Simkl`
+    : `Trending on Simkl ${TRENDING[list.value].toLowerCase()}`
+  return genre.value ? `${name} · ${genreName.value}` : name
 })
 
 const toOptions = (labels: Record<string, string>) =>
@@ -92,29 +116,35 @@ const MOST_WATCHED = {
 </script>
 
 <template>
-  <section class="discover" aria-label="Discover">
-    <SegmentedControl v-model="type" :options="TYPES" label="Category" />
-
-    <div class="filters">
-      <AppSelect
+  <div class="pinned">
+    <slot />
+    <SegmentedControl v-show="!hidden" v-model="type" :options="TYPES" label="Category" />
+    <div v-show="!hidden" class="filters">
+      <FilterSheet
         :model-value="list"
         :groups="listGroups"
-        aria-label="List"
-        :disabled="Boolean(genre)"
+        :label="isBrowse(list) ? 'Browse' : 'Trending'"
+        title="List"
+        :icon="isBrowse(list) ? Compass : TrendingUp"
         @update:model-value="list = $event as List"
       />
-      <AppSelect
+      <FilterSheet
         :model-value="genre || ALL_GENRES"
         :groups="genreGroups"
-        aria-label="Genre"
+        label="Genre"
+        title="Genre"
+        :icon="Tag"
+        search-label="Find a genre"
         @update:model-value="genre = $event === ALL_GENRES ? '' : $event"
       />
     </div>
+  </div>
 
+  <section v-show="!hidden" class="discover" aria-label="Discover">
     <h2>{{ heading }}</h2>
     <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
-    <p v-else-if="!cards?.length" class="muted">Nothing here right now.</p>
+    <p v-else-if="!cards?.length" class="muted">{{ emptyMessage }}</p>
     <template v-else>
       <ul class="card-list">
         <TitleRow v-for="card in cards.slice(0, shown)" :key="card.id" :card="card" />
@@ -137,12 +167,8 @@ const MOST_WATCHED = {
 }
 
 .filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
-}
-
-.filters > * {
-  flex: 1;
-  min-width: 0;
 }
 </style>

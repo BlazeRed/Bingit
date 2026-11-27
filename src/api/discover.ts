@@ -13,6 +13,9 @@ export interface Card {
   ids: SimklIds
   animeType: string | null
   episodes: number | null
+  /** Only some lists send these. */
+  genres?: string[]
+  rating?: number | null
 }
 
 /** The parts the endpoints share; each one uses its own subset. */
@@ -33,6 +36,8 @@ export interface RawTitle {
   /** Simkl popularity rank: lower is more popular. */
   rank?: number | null
   total_episodes?: number | null
+  genres?: string[] | null
+  ratings?: { simkl?: { rating?: number | null } | null } | null
 }
 
 export function toCard(raw: RawTitle, type: MediaType): Card | null {
@@ -49,6 +54,8 @@ export function toCard(raw: RawTitle, type: MediaType): Card | null {
     ids: { ...ids, simkl: id },
     animeType: type === 'anime' ? (raw.anime_type ?? raw.type ?? null) : null,
     episodes: raw.ep_count ?? raw.total_episodes ?? null,
+    genres: raw.genres ?? undefined,
+    rating: raw.ratings?.simkl?.rating ?? null,
   }
 }
 
@@ -84,21 +91,27 @@ export async function searchTitles(
 
 export type TrendingPeriod = 'today' | 'week' | 'month'
 
-export async function getTrending(type: MediaType, period: TrendingPeriod) {
-  const list = await simklData<RawTitle[]>(`/discover/trending/${type}/${period}_100.json`)
-  return toCards(list, () => type)
+export interface Genre {
+  name: string
+  slug: string
+}
+
+/**
+ * One genre has its own file for the month only. For today and this week the
+ * genre is picked out of the 500 most watched titles.
+ */
+export async function getTrending(type: MediaType, period: TrendingPeriod, genre?: Genre) {
+  let file = `${period}_${genre ? 500 : 100}`
+  if (genre && period === 'month') file = `genre/${encodeURIComponent(genre.slug)}_month_500`
+  const list = await simklData<RawTitle[]>(`/discover/trending/${type}/${file}.json`)
+  const cards = toCards(list, () => type)
+  if (!genre) return cards
+  const matches = period === 'month' ? cards : cards.filter((c) => c.genres?.includes(genre.name))
+  return matches.slice(0, 100)
 }
 
 export const getGenres = (type: MediaType) =>
-  simklData<{ name: string; slug: string }[]>(`/discover/trending/${type}/genre/index.json`)
-
-/** This month's most watched in one genre. */
-export async function getGenreTrending(type: MediaType, slug: string) {
-  const list = await simklData<RawTitle[]>(
-    `/discover/trending/${type}/genre/${encodeURIComponent(slug)}_month_500.json`,
-  )
-  return toCards(list.slice(0, 100), () => type)
-}
+  simklData<Genre[]>(`/discover/trending/${type}/genre/index.json`)
 
 /** Top rated and premieres exist only for TV and anime, and cost quota. */
 export async function getBrowse(type: 'tv' | 'anime', list: 'best' | 'new' | 'soon') {

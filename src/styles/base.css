@@ -86,6 +86,20 @@ textarea {
   font-size: var(--text-md);
 }
 
+/* Title and controls that stay on top while the list scrolls. */
+.pinned {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  /* Full width, so rows do not show at the sides while they scroll under. */
+  margin-inline: calc(-1 * var(--space-5));
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  background: var(--color-bg);
+}
+
 .muted {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -233,14 +247,9 @@ textarea {
   cursor: pointer;
 }
 
-/* Floating panels (select menu, popover), above the bottom sheet. */
-.popup {
-  z-index: 5;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+.icon-button[aria-pressed='true'] {
+  background: var(--color-action);
+  color: var(--color-on-action);
 }
 
 .visually-hidden {
