@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LibraryBig } from '@lucide/vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -6,7 +7,7 @@ import ContinueCard from './ContinueCard.vue'
 import { inProgress } from '@/home/continue'
 import { useLibraryStore } from '@/stores/library'
 
-const MAX = 6
+const MAX = 5
 
 const library = useLibraryStore()
 const shows = computed(() => inProgress(library.items))
@@ -14,7 +15,12 @@ const shows = computed(() => inProgress(library.items))
 
 <template>
   <section class="continue">
-    <h2>Continue watching</h2>
+    <div class="continue__header">
+      <h2>Continue watching</h2>
+      <RouterLink v-if="shows.length > MAX" class="action-link" :to="{ name: 'library' }">
+        <LibraryBig :size="16" aria-hidden="true" />All {{ shows.length }}
+      </RouterLink>
+    </div>
     <p v-if="!library.isImported" class="muted" role="status">
       {{ library.progress || 'Loading your library…' }}
     </p>
@@ -25,9 +31,6 @@ const shows = computed(() => inProgress(library.items))
     <ul v-else>
       <ContinueCard v-for="item in shows.slice(0, MAX)" :key="item.id" :item="item" />
     </ul>
-    <p v-if="shows.length > MAX" class="muted">
-      <RouterLink :to="{ name: 'library' }">All {{ shows.length }} in your library</RouterLink>
-    </p>
   </section>
 </template>
 
@@ -36,6 +39,12 @@ const shows = computed(() => inProgress(library.items))
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+.continue__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 ul {

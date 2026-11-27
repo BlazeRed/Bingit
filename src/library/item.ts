@@ -1,5 +1,6 @@
 /** The local mirror of one title: only the fields the app reads. */
 import type { SimklEntry, SimklIds, SimklItemsKey, SimklStatus } from '@/api/simkl-types'
+import { padEpisodeCode } from './episodes'
 
 export type MediaType = 'movies' | 'tv' | 'anime'
 
@@ -46,7 +47,7 @@ export function toLibraryItem(key: SimklItemsKey, entry: SimklEntry): LibraryIte
     rating: entry.user_rating ?? null,
     addedAt: entry.added_to_watchlist_at,
     lastWatchedAt: entry.last_watched_at,
-    nextToWatch: entry.next_to_watch ?? null,
+    nextToWatch: entry.next_to_watch ? padEpisodeCode(entry.next_to_watch) : null,
     watchedCount: entry.watched_episodes_count,
     totalCount: entry.total_episodes_count,
     notAiredCount: entry.not_aired_episodes_count,

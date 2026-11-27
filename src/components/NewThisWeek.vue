@@ -7,10 +7,9 @@ import { getCalendar } from '@/api/discover'
 import CalendarSheet from './CalendarSheet.vue'
 import { useAsync } from '@/composables/useAsync'
 import { daysUntil, followedIds, groupByDay } from '@/discover/calendar'
+import { TYPES } from '@/library/browse'
 import type { MediaType } from '@/library/item'
 import { useLibraryStore } from '@/stores/library'
-
-const MAX_ROWS = 5
 
 const emit = defineEmits<{ count: [episodes: number] }>()
 
@@ -21,23 +20,38 @@ const {
   retry,
 } = useAsync(
   () => true,
-  () => Promise.all([getCalendar('tv'), getCalendar('anime')]),
+  () => Promise.all((['tv', 'anime', 'movies'] as const).map(getCalendar)),
 )
 
 const airings = computed(() => {
-  const [tv, anime] = files.value ?? []
-  if (!tv || !anime) return []
+  const [tv, anime, movies] = files.value ?? []
+  if (!tv || !anime || !movies) return []
   const now = new Date()
   const mine = followedIds(library.items)
-  return [...groupByDay(tv, 'tv', now, mine), ...groupByDay(anime, 'anime', now, mine)]
+  return [
+    ...groupByDay(tv, 'tv', now, mine),
+    ...groupByDay(anime, 'anime', now, mine),
+    ...groupByDay(movies, 'movies', now, mine),
+  ]
     .flatMap((day) => day.airings)
     .filter((airing) => daysUntil(airing.date, now) < 7)
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .map((airing) => ({ ...airing, inDays: daysUntil(airing.date, now) }))
 })
 
+/** The first release of each category, soonest first. */
+const rows = computed(() =>
+  airings.value.filter(
+    (airing, index) =>
+      airings.value.findIndex((other) => other.card.type === airing.card.type) === index,
+  ),
+)
+
+const more = computed(() => airings.value.length - rows.value.length)
+
 watch(
-  () => airings.value.length,
+  // The page header counts episodes only.
+  () => airings.value.filter((airing) => airing.card.type !== 'movies').length,
   (length) => emit('count', length),
   { immediate: true },
 )
@@ -60,7 +74,7 @@ function open(type: MediaType) {
   <section class="week">
     <div class="week__header">
       <h2>New this week</h2>
-      <button type="button" class="week__all" @click="open('tv')">
+      <button type="button" class="action-link" @click="open('tv')">
         <CalendarDays :size="16" aria-hidden="true" />Calendar
       </button>
     </div>
@@ -68,10 +82,10 @@ function open(type: MediaType) {
     <ErrorNote v-if="error" :message="error" @retry="retry" />
     <p v-else-if="!files || !library.isImported" class="muted" role="status">Loading…</p>
     <p v-else-if="!airings.length" class="muted">
-      No new episodes from your library in the next 7 days.
+      Nothing new from your library in the next 7 days.
     </p>
     <ul v-else>
-      <li v-for="airing in airings.slice(0, MAX_ROWS)" :key="airing.key">
+      <li v-for="airing in rows" :key="airing.key">
         <button type="button" class="week__row" @click="open(airing.card.type)">
           <span class="week__date mono">
             {{ weekday(airing.date) }}
@@ -79,14 +93,18 @@ function open(type: MediaType) {
           </span>
           <span class="week__text">
             <span class="week__title">{{ airing.card.title }}</span>
-            <span class="muted mono">{{ airing.episode }} · {{ when(airing.inDays) }}</span>
+            <span class="muted mono">
+              {{ TYPES[airing.card.type] }}
+              <template v-if="airing.episode"> · {{ airing.episode }}</template>
+              · {{ when(airing.inDays) }}
+            </span>
           </span>
         </button>
       </li>
     </ul>
-    <p v-if="airings.length > MAX_ROWS" class="muted">
-      {{ airings.length - MAX_ROWS }} more in the calendar.
-    </p>
+    <button v-if="more" type="button" class="action-link week__more" @click="open('tv')">
+      <CalendarDays :size="16" aria-hidden="true" />{{ more }} more in the calendar
+    </button>
 
     <CalendarSheet v-model:open="isOpen" :initial-type="sheetType" />
   </section>
@@ -105,16 +123,8 @@ function open(type: MediaType) {
   align-items: center;
 }
 
-.week__all {
-  display: inline-flex;
-  gap: var(--space-2);
-  align-items: center;
-  min-height: var(--tap-min);
-  border: 0;
-  background: transparent;
-  color: var(--color-link);
-  font-size: var(--text-sm);
-  cursor: pointer;
+.week__more {
+  align-self: flex-start;
 }
 
 ul {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ExternalLink } from '@lucide/vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -61,8 +62,13 @@ const facts = computed(() => {
           >
             Mark watched
           </button>
-          <a class="panel__simkl" :href="simklPageUrl(item)" target="_blank" rel="noopener">
-            View on Simkl →
+          <a
+            class="panel__simkl action-link"
+            :href="simklPageUrl(item)"
+            target="_blank"
+            rel="noopener"
+          >
+            <ExternalLink :size="16" aria-hidden="true" />View on Simkl
           </a>
         </div>
         <p v-for="warning in warnings" :key="warning" class="muted">{{ warning }}</p>

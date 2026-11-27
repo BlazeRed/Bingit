@@ -27,3 +27,7 @@ export function parseEpisodeCode(code: string): Episodes | null {
   const match = /^(?:S(\d+))?E(\d+)$/.exec(code)
   return match ? { [Number(match[1] ?? 1)]: [Number(match[2])] } : null
 }
+
+/** Simkl writes anime codes as `E5`; the app always shows two digits, as in `E05`. */
+export const padEpisodeCode = (code: string) =>
+  code.replace(/\d+/g, (number) => number.padStart(2, '0'))

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ExternalLink } from '@lucide/vue'
 import type { WatchOptions } from '@/api/watch-providers'
 
 defineProps<{ options: WatchOptions }>()
@@ -23,10 +24,11 @@ defineProps<{ options: WatchOptions }>()
       </div>
     </dl>
     <p>
-      <a :href="options.link" target="_blank" rel="noopener">All options on TMDB →</a>
-      · Data from
-      <a href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>
+      Data from <a href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>
     </p>
+    <a class="action-link" :href="options.link" target="_blank" rel="noopener">
+      <ExternalLink :size="16" aria-hidden="true" />All options on TMDB
+    </a>
   </section>
 </template>
 

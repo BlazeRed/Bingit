@@ -44,7 +44,13 @@ const summary = computed(() => {
   <main v-else class="page guest">
     <div class="guest__hero">
       <div class="guest__brand">
-        <img src="/icons/icon.svg" alt="" width="64" height="64" />
+        <!-- public/icons/icon.svg, inline so that it follows the theme. -->
+        <svg viewBox="0 0 512 512" aria-hidden="true">
+          <rect class="logo-bg" width="512" height="512" rx="112" />
+          <path class="logo-play" d="M196 140v184l152-92z" stroke-width="28" />
+          <rect class="logo-track" x="136" y="368" width="240" height="24" rx="12" />
+          <rect class="logo-bar" x="136" y="368" width="150" height="24" rx="12" />
+        </svg>
         <h1>Bingit</h1>
       </div>
       <p class="guest__tagline">Track it. Binge it. Sync it.</p>
@@ -104,9 +110,28 @@ const summary = computed(() => {
 }
 
 /* Scales with the name beside it. */
-.guest__brand img {
+.guest__brand svg {
+  flex: none;
   width: var(--text-hero);
   height: var(--text-hero);
+}
+
+.logo-bg {
+  fill: var(--color-logo-bg);
+}
+
+.logo-play {
+  fill: var(--color-logo-play);
+  stroke: var(--color-logo-play);
+  stroke-linejoin: round;
+}
+
+.logo-track {
+  fill: var(--color-logo-track);
+}
+
+.logo-bar {
+  fill: var(--color-logo-bar);
 }
 
 .guest .guest__hero h1 {

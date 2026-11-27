@@ -31,9 +31,7 @@ const isOpen = defineModel<boolean>('open', { required: true })
         <DialogDescription class="visually-hidden">
           Upcoming episodes and movie releases.
         </DialogDescription>
-        <div class="sheet__body">
-          <CalendarList :initial-type="initialType" />
-        </div>
+        <CalendarList :initial-type="initialType" />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -85,12 +83,6 @@ const isOpen = defineModel<boolean>('open', { required: true })
   border-radius: var(--radius-full);
   background: var(--color-surface-sunken);
   cursor: pointer;
-}
-
-.sheet__body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--space-4) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
 }
 
 @keyframes sheet-in {

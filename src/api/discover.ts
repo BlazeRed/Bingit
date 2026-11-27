@@ -18,6 +18,8 @@ export interface Card {
 /** The parts the endpoints share; each one uses its own subset. */
 export interface RawTitle {
   title: string
+  /** Anime in search results. */
+  title_en?: string | null
   year?: number | null
   /** `MM/DD/YYYY` in trending files, ISO elsewhere. */
   release_date?: string | null
@@ -41,7 +43,7 @@ export function toCard(raw: RawTitle, type: MediaType): Card | null {
   return {
     id,
     type,
-    title: raw.title,
+    title: raw.title_en || raw.title,
     year: raw.year ?? releaseYear,
     poster: raw.poster ?? null,
     ids: { ...ids, simkl: id },

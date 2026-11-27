@@ -48,48 +48,88 @@ const time = (date: Date) => date.toLocaleTimeString('en', { timeStyle: 'short' 
 
 <template>
   <div class="calendar">
-    <SegmentedControl v-model="type" :options="TYPES" label="Category" />
-    <label class="mine">
-      <input v-model="isMineOnly" type="checkbox" />
-      Only titles in my library
-    </label>
+    <div class="calendar__filters">
+      <SegmentedControl v-model="type" :options="TYPES" label="Category" />
+      <label class="mine">
+        <input v-model="isMineOnly" type="checkbox" />
+        Only titles in my library
+      </label>
+    </div>
 
-    <ErrorNote v-if="error" :message="error" @retry="retry" />
-    <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
-    <p v-else-if="!days.length" class="muted">Nothing scheduled in the coming weeks.</p>
+    <!-- A new filter starts from the first day. -->
+    <div :key="`${type}:${isMineOnly}`" class="calendar__days">
+      <ErrorNote v-if="error" :message="error" @retry="retry" />
+      <p v-else-if="isLoading" class="muted" role="status">Loading…</p>
+      <p v-else-if="!days.length" class="muted">Nothing scheduled in the coming weeks.</p>
 
-    <section v-for="day in days.slice(0, shown)" :key="day.date.toDateString()">
-      <h3>{{ dayName(day.date) }}</h3>
-      <ul class="card-list">
-        <TitleRow
-          v-for="airing in airingsOf(day)"
-          :key="airing.key"
-          :card="airing.card"
-          :note="[airing.episode, time(airing.date)].filter(Boolean).join(' · ')"
-        />
-      </ul>
+      <section v-for="day in days.slice(0, shown)" :key="day.date.toDateString()">
+        <h3>{{ dayName(day.date) }}</h3>
+        <ul class="card-list">
+          <TitleRow
+            v-for="airing in airingsOf(day)"
+            :key="airing.key"
+            :card="airing.card"
+            :note="[airing.episode, time(airing.date)].filter(Boolean).join(' · ')"
+          />
+        </ul>
+        <button
+          v-if="airingsOf(day).length < day.airings.length"
+          type="button"
+          class="field all"
+          @click="expanded.add(day.date.toDateString())"
+        >
+          Show all {{ day.airings.length }}
+        </button>
+      </section>
+
       <button
-        v-if="airingsOf(day).length < day.airings.length"
+        v-if="shown < days.length"
         type="button"
-        class="field all"
-        @click="expanded.add(day.date.toDateString())"
+        class="field"
+        @click="shown += DAYS_PER_PAGE"
       >
-        Show all {{ day.airings.length }}
+        Show more days
       </button>
-    </section>
+    </div>
 
-    <button v-if="shown < days.length" type="button" class="field" @click="shown += DAYS_PER_PAGE">
-      Show more days
-    </button>
-    <p class="muted">Release data from <a href="https://simkl.com">Simkl</a>.</p>
+    <p class="calendar__credit muted">Release data from <a href="https://simkl.com">Simkl</a>.</p>
   </div>
 </template>
 
 <style scoped>
 .calendar {
   display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.calendar__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.calendar__days {
+  display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4) var(--space-5);
+}
+
+/* The list scrolls; its sections must not shrink. */
+.calendar__days > * {
+  flex-shrink: 0;
+}
+
+.calendar__credit {
+  padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
 }
 
 .all {

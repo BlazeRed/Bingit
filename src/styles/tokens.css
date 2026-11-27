@@ -31,6 +31,11 @@
   --color-link: #4b1d3f;
   --color-danger: #b42318;
   --color-focus: #4b1d3f;
+  /* App icon on the page. The installed icon and favicon stay mulberry. */
+  --color-logo-bg: #4b1d3f;
+  --color-logo-play: #f4a988;
+  --color-logo-track: #7a4656;
+  --color-logo-bar: #c97b84;
   --shadow-raised: 0 1px 2px rgb(33 16 26 / 0.08);
 
   /* Brand source colors, for artwork fallbacks and gradients only */
@@ -121,6 +126,10 @@
     --color-link: #f4a988;
     --color-danger: #f97066;
     --color-focus: #f4a988;
+    --color-logo-bg: #f4a988;
+    --color-logo-play: #4b1d3f;
+    --color-logo-track: #d98f7c;
+    --color-logo-bar: #8a3f5c;
     --shadow-raised: none;
     color-scheme: dark;
   }
@@ -146,6 +155,10 @@
   --color-link: #f4a988;
   --color-danger: #f97066;
   --color-focus: #f4a988;
+  --color-logo-bg: #f4a988;
+  --color-logo-play: #4b1d3f;
+  --color-logo-track: #d98f7c;
+  --color-logo-bar: #8a3f5c;
   --shadow-raised: none;
   color-scheme: dark;
 }

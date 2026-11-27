@@ -38,7 +38,7 @@ export function seedItem(type: MediaType, detail: SimklDetail, seasons: Season[]
     id: detail.ids.simkl,
     type,
     status: 'plantowatch',
-    title: detail.title,
+    title: detail.en_title || detail.title,
     year: detail.year ?? null,
     poster: detail.poster ?? null,
     runtime: detail.runtime ?? null,

@@ -11,7 +11,7 @@ import { toLibraryItem, type LibraryItem } from '@/library/item'
 
 const LIBRARY_KEY = 'library'
 /** Bump to force a full re-import after a change to `LibraryItem`. */
-const VERSION = 1
+const VERSION = 2
 const MIN_INTERVAL_MS = 5 * 60 * 1000
 
 /** Items and snapshot live in one record, so they are always saved together. */

@@ -12,7 +12,13 @@ vi.mock('@/api/discover', async (original) => ({
   ...(await original<typeof import('@/api/discover')>()),
   getCalendar: async (type: string) => ({
     calendar:
-      type === 'tv' ? [{ simkl_id: 1, date: tomorrow, episode: { season: 1, episode: 4 } }] : [],
+      type === 'tv'
+        ? [4, 5].map((episode) => ({
+            simkl_id: 1,
+            date: tomorrow,
+            episode: { season: 1, episode },
+          }))
+        : [],
     metadata: { 1: { title: 'Northbound', ids: { simkl_id: 1 } } },
   }),
 }))
@@ -33,6 +39,9 @@ describe('NewThisWeek', () => {
     })
     await flushPromises()
     expect(wrapper.text()).toContain('S01E04 · Tomorrow')
+    // One row per category; the rest is in the calendar.
+    expect(wrapper.findAll('li')).toHaveLength(1)
+    expect(wrapper.text()).toContain('1 more in the calendar')
     expect(document.querySelector('[role="dialog"]')).toBeNull()
 
     await wrapper.get('li button').trigger('click')

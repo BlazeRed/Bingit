@@ -137,6 +137,22 @@ textarea {
   cursor: pointer;
 }
 
+/* A section action or an external link: icon and text, no underline. */
+.action-link {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-link);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

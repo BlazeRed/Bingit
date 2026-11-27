@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ExternalLink } from '@lucide/vue'
 import { ref, watch } from 'vue'
 
 import { version } from '../../package.json'
@@ -33,11 +34,12 @@ function signOut() {
         <h1>{{ auth.userName || 'Me' }}</h1>
         <a
           v-if="auth.account"
+          class="action-link"
           :href="`https://simkl.com/${auth.account.id}/`"
           target="_blank"
           rel="noopener"
         >
-          View profile on Simkl →
+          <ExternalLink :size="16" aria-hidden="true" />View profile on Simkl
         </a>
       </div>
     </header>

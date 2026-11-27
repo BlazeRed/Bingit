@@ -67,7 +67,10 @@ export const getActivities = () => simklUser<SimklActivities>('/sync/activities'
 
 /** Never call without checking `getActivities` first, except for the first import. */
 export const getAllItems = (query: Record<string, string>, type?: SimklItemsKey) =>
-  simklUser<SimklAllItems>(type ? `/sync/all-items/${type}` : '/sync/all-items', { query })
+  simklUser<SimklAllItems>(type ? `/sync/all-items/${type}` : '/sync/all-items', {
+    // English titles, whatever the language of the Simkl profile is.
+    query: { language: 'en', ...query },
+  })
 
 export const getRatings = (query: Record<string, string>) =>
   simklUser<SimklAllItems>('/sync/ratings', { query })

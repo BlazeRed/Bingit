@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ChevronLeft } from '@lucide/vue'
+import { ChevronLeft, ExternalLink } from '@lucide/vue'
 
 import EpisodeList from '@/components/EpisodeList.vue'
 import PeopleList from '@/components/PeopleList.vue'
@@ -237,7 +237,9 @@ const nextAiring = computed(() => {
         </section>
 
         <p>
-          <a :href="simklPageUrl(subject)" target="_blank" rel="noopener">View on Simkl →</a>
+          <a class="action-link" :href="simklPageUrl(subject)" target="_blank" rel="noopener">
+            <ExternalLink :size="16" aria-hidden="true" />View on Simkl
+          </a>
         </p>
         <p v-if="anime" class="muted">
           Anime data from

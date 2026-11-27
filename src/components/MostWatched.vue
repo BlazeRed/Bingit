@@ -2,7 +2,7 @@
 import ErrorNote from './ErrorNote.vue'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Check, Plus } from '@lucide/vue'
+import { Check, Compass, Plus } from '@lucide/vue'
 
 import { getTrending, type Card } from '@/api/discover'
 import { posterUrl } from '@/api/images'
@@ -48,6 +48,9 @@ const linkTo = (card: Card) =>
   <section class="top" :class="{ 'top--guest': isGuest }">
     <div class="top__header">
       <h2>Most watched on Simkl this week</h2>
+      <RouterLink v-if="!isGuest" class="action-link" :to="{ name: 'search' }">
+        <Compass :size="16" aria-hidden="true" />Discover
+      </RouterLink>
       <SegmentedControl v-model="type" :options="TYPES" label="Category" />
     </div>
 
@@ -102,10 +105,6 @@ const linkTo = (card: Card) =>
         <span class="muted mono">{{ card.year }}</span>
       </li>
     </ol>
-
-    <p v-if="!isGuest">
-      <RouterLink :to="{ name: 'search' }">Discover more in Search →</RouterLink>
-    </p>
   </section>
 </template>
 
@@ -120,8 +119,11 @@ const linkTo = (card: Card) =>
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  justify-content: space-between;
   align-items: center;
+}
+
+.top__header h2 {
+  flex: 1;
 }
 
 /* Full width on phones. */
@@ -230,6 +232,11 @@ button.top__badge {
   .top__header .segmented {
     width: auto;
     min-width: 15rem;
+  }
+
+  /* Wide screens: title, category, then the action at the far right. */
+  .top__header a {
+    order: 1;
   }
 
   .top--guest > p {

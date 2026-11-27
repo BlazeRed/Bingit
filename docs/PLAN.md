@@ -1,6 +1,6 @@
 # Bingit — project plan
 
-Free, open-source (GPL-3.0) web app to track movies, TV shows and anime on top of Simkl. Static SPA, hosted on Netlify free tier; the only server code is a TMDB proxy function. English only.
+Free, open-source (GPL-3.0) web app to track movies, TV shows and anime on top of Simkl. Static SPA, hosted on Netlify free tier; the only server code is a TMDB proxy function. English only; anime use their English title.
 
 API facts and limits: see [simkl-api-research.md](./simkl-api-research.md). Technical architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -172,11 +172,13 @@ Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 ### Up next (`/`)
 
 1. Header: "N in progress · M new episodes this week".
-2. **Continue watching**: up to 6 shows in progress, most recently watched first. Poster, title, next episode code and name, progress, one-tap ✓ (the row moves to the following episode at once).
-3. **New this week**: next 7 days of the calendar ∩ library (dropped titles excluded), up to 5 rows with date, the first one highlighted. A row, or the "Calendar" link, opens the **calendar bottom sheet**: Movies / TV / Anime, "Only titles in my library" (on by default), days from today, 7 at a time; without the filter, the 15 most popular per day plus "Show all".
-4. **Most watched on Simkl this week**: Movies / TV / Anime, ranked posters with quick add to Watchlist, link "Discover more in Search". Trending files are free and don't use the daily quota.
+2. **Continue watching**: up to 5 shows in progress, most recently watched first. Poster, title, next episode code and name, progress, one-tap ✓ (the row moves to the following episode at once).
+3. **New this week**: next 7 days of the calendar ∩ library (dropped titles excluded), the next release of each category (TV, anime, movies) with date, the first one highlighted. A row, or the "Calendar" link, opens the **calendar bottom sheet**: Movies / TV / Anime, "Only titles in my library" (on by default), days from today, 7 at a time; without the filter, the 15 most popular per day plus "Show all". Filters and Simkl credit stay in place; only the days scroll.
+4. **Most watched on Simkl this week**: Movies / TV / Anime, ranked posters with quick add to Watchlist, "Discover" action to Search. Trending files are free and don't use the daily quota.
 
-Desktop: two columns. Left: continue watching as 3 landscape cards, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
+Section actions and external links use one style (icon + text, no arrows).
+
+Desktop: two columns. Left: continue watching as landscape cards, 3 per row, then most watched as one row of 6. Right: new this week, then the 3 titles added last to the Watchlist (desktop only).
 
 ### Search (`/search`)
 
