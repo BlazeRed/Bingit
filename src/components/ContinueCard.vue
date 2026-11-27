@@ -75,7 +75,8 @@ function mark() {
       :aria-label="`Mark ${code} of ${item.title} watched`"
       @click="mark"
     >
-      <Check :size="16" aria-hidden="true" />
+      <!-- At this size the tick is as tall as the digits: same top, same baseline. -->
+      <Check :size="20" :stroke-width="2.25" aria-hidden="true" />
       <span class="card__long">Watched</span>
       {{ short }}
     </button>

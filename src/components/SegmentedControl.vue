@@ -1,20 +1,27 @@
 <script setup lang="ts" generic="T extends string">
+import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
+
 defineProps<{ options: Record<T, string>; label: string }>()
 const model = defineModel<T>({ required: true })
+
+/** A second press on the selected option sends nothing: one option stays selected. */
+function select(value: unknown) {
+  if (value) model.value = value as T
+}
 </script>
 
 <template>
-  <div class="segmented" role="group" :aria-label="label">
-    <button
-      v-for="(text, value) in options"
-      :key="value"
-      type="button"
-      :aria-pressed="model === value"
-      @click="model = value as T"
-    >
+  <ToggleGroupRoot
+    class="segmented"
+    type="single"
+    :model-value="model"
+    :aria-label="label"
+    @update:model-value="select"
+  >
+    <ToggleGroupItem v-for="(text, value) in options" :key="value" :value="value">
       {{ text }}
-    </button>
-  </div>
+    </ToggleGroupItem>
+  </ToggleGroupRoot>
 </template>
 
 <style scoped>
@@ -37,7 +44,7 @@ button {
   cursor: pointer;
 }
 
-button[aria-pressed='true'] {
+button[data-state='on'] {
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-raised);
   color: var(--color-text);

@@ -94,7 +94,8 @@ const meta = computed(() => {
       :aria-label="`Mark ${next.code} of ${item.title} watched`"
       @click="emit('watch', item, next.episodes)"
     >
-      <Check :size="16" aria-hidden="true" />{{ next.short }}
+      <!-- At this size the tick is as tall as the digits: same top, same baseline. -->
+      <Check :size="20" :stroke-width="2.25" aria-hidden="true" />{{ next.short }}
     </button>
   </li>
 </template>

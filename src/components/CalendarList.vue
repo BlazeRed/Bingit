@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
+import { Check } from '@lucide/vue'
 import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 
@@ -51,7 +53,11 @@ const time = (date: Date) => date.toLocaleTimeString('en', { timeStyle: 'short' 
     <div class="calendar__filters">
       <SegmentedControl v-model="type" :options="TYPES" label="Category" />
       <label class="mine">
-        <input v-model="isMineOnly" type="checkbox" />
+        <CheckboxRoot v-model="isMineOnly" class="mine__box">
+          <CheckboxIndicator>
+            <Check :size="14" :stroke-width="3" aria-hidden="true" />
+          </CheckboxIndicator>
+        </CheckboxRoot>
         Only titles in my library
       </label>
     </div>
@@ -141,6 +147,25 @@ const time = (date: Date) => date.toLocaleTimeString('en', { timeStyle: 'short' 
   gap: var(--space-2);
   align-items: center;
   min-height: var(--tap-min);
+}
+
+.mine__box {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.mine__box[data-state='checked'] {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-on-action);
 }
 
 h3 {

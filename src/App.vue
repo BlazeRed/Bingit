@@ -97,7 +97,7 @@ onUnmounted(() => {
   <AddedToast v-if="auth.status === 'signedIn'" />
   <AppUpdate />
 
-  <div :class="{ shell: auth.status === 'signedIn', landing: isLanding }">
+  <div class="frame" :class="{ shell: auth.status === 'signedIn', landing: isLanding }">
     <SearchBar v-if="auth.status === 'signedIn' && route.name !== 'search'" @open="goToSearch" />
 
     <p v-if="!isOnline" class="offline" role="status">
@@ -147,6 +147,17 @@ onUnmounted(() => {
   font-size: var(--text-sm);
 }
 
+/* The attribution ends the page, also when the content is short. It scrolls with it. */
+.frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+#content {
+  flex: 1;
+}
+
 .shell {
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
 }
@@ -158,9 +169,6 @@ onUnmounted(() => {
 }
 
 .landing {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
   background: linear-gradient(
     160deg,
     color-mix(in srgb, var(--brand-velvet-rose) 28%, var(--color-bg)),
@@ -171,7 +179,6 @@ onUnmounted(() => {
 
 .landing #content {
   display: flex;
-  flex: 1;
   flex-direction: column;
 }
 

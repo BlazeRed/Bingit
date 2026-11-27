@@ -161,7 +161,7 @@ Mocks: https://claude.ai/artifact/JEtasoiffwbezLvff3tG9m (page "Calm palettes").
 
 - Mobile-first, usable on desktop. Tracking-first, not browse-first.
 - Core flow: search → add to Watchlist; mark episode / season / "up to here"; rating 1–10.
-- Nav: Up next · Library · Search · Me. Library = category (Movies / TV / Anime) × bucket (Watchlist / Watching / Seen); Paused + Dropped secondary. Movies have no Watching bucket.
+- Nav: Up next · Library · Search · Me. Library = category (Movies / TV / Anime) × bucket (Watchlist / Watching); Seen, Paused and Dropped are the archive. Movies have no Watching or Paused bucket, so Seen is a main tab for them.
 - Style: "Calm" — light + dark themes, list-first, small artwork; detail page gets a backdrop band.
 - Palette: "Combination" — mulberry #4B1D3F (light-mode action), apricot #F4A988 (dark-mode action, next-episode/rating highlight), velvet rose #C97B84 (progress, status). Neutrals tinted toward mulberry.
 - Font: Geist (UI) + Geist Mono (episode codes, runtimes, ratings), self-hosted via `@fontsource-variable` (no Google Fonts request).
@@ -189,6 +189,14 @@ Desktop: two columns. Left: continue watching as landscape cards, 3 per row, the
 
 Up next · Library · Search · Me. On desktop, every page except Search has a search button in a top bar. Phone: bottom bar. Desktop (≥ 1024 px): left sidebar with Library category shortcuts, counts, and the user with the last sync time.
 
+### Library
+
+Title, category, title filter and status tabs stay pinned at the top. Two icon buttons in the title bar: filters (popover with sort, list or grid, and a reset button) and archive (bottom sheet with Seen / Paused / Dropped tabs, Dropped only for movies and its own title filter; `?archive=` keeps it open after "back"). Default sort: recently watched, then recently added.
+
+### Controls
+
+Use the Reka UI primitive when one exists (Drawer, Select, Tabs, ToggleGroup, Popover, Checkbox) and style it with tokens. Reka has no plain text input: use the native one.
+
 ### Library on desktop
 
 The list becomes a table (title, progress, next, rating, mark button) when it is wide enough. A row opens the title in a side panel (status, rating, "View on Simkl", the current season); the panel's title opens the title page. Modified clicks behave as links.
@@ -213,8 +221,6 @@ Me shows an "Install" section (not in the mock) when the browser can install, or
 
 | Screen | Mock | Now |
 |---|---|---|
-| Library | No filter, sort or grid controls | Kept: they are in §4 |
-| Status control | Custom button with chevron | Native select (same look, built-in keyboard and screen reader support) |
 | Me | No data section | "Your data": export and restore |
 
 ## 9. Open items

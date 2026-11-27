@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { searchTitles, type Card, type SearchScope } from '@/api/discover'
 import { SignedOutError } from '@/auth/session'
 import DiscoverPanel from '@/components/DiscoverPanel.vue'
+import SearchField from '@/components/SearchField.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import TitleRow from '@/components/TitleRow.vue'
 import { messageOf } from '@/lib/errors'
@@ -73,14 +74,11 @@ onUnmounted(cancel)
 <template>
   <main class="page">
     <h1>Search</h1>
-    <input
+    <SearchField
       id="search-input"
       v-model="query"
-      class="field"
-      type="search"
       aria-label="Search titles"
       placeholder="Search movies, TV, anime"
-      autocomplete="off"
     />
 
     <template v-if="isActive">

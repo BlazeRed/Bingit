@@ -15,18 +15,18 @@ export type Bucket = keyof typeof BUCKETS
 export const TYPES: Record<MediaType, string> = { movies: 'Movies', tv: 'TV', anime: 'Anime' }
 
 /** Movies have no Watching or Paused state on Simkl. */
-export function bucketsFor(type: MediaType): { primary: Bucket[]; secondary: Bucket[] } {
+export function bucketsFor(type: MediaType): { primary: Bucket[]; archive: Bucket[] } {
   return type === 'movies'
-    ? { primary: ['watchlist', 'seen'], secondary: ['dropped'] }
-    : { primary: ['watchlist', 'watching', 'seen'], secondary: ['paused', 'dropped'] }
+    ? { primary: ['watchlist', 'seen'], archive: ['dropped'] }
+    : { primary: ['watchlist', 'watching'], archive: ['seen', 'paused', 'dropped'] }
 }
 
 /** Turns raw route params into a valid type and bucket. */
 export function parseSelection(type: unknown, bucket: unknown) {
   const safeType: MediaType = type === 'movies' || type === 'anime' ? type : 'tv'
-  const { primary, secondary } = bucketsFor(safeType)
+  const { primary } = bucketsFor(safeType)
   const fallback: Bucket = safeType === 'movies' ? 'watchlist' : 'watching'
-  const safeBucket = [...primary, ...secondary].find((b) => b === bucket) ?? fallback
+  const safeBucket = primary.find((b) => b === bucket) ?? fallback
   return { type: safeType, bucket: safeBucket }
 }
 
@@ -40,7 +40,9 @@ export const SORTS = {
   },
   watched: {
     label: 'Recently watched',
-    compare: (a: LibraryItem, b: LibraryItem) => newestFirst(a.lastWatchedAt, b.lastWatchedAt),
+    // Titles never watched (the watchlist) follow, newest additions first.
+    compare: (a: LibraryItem, b: LibraryItem) =>
+      newestFirst(a.lastWatchedAt, b.lastWatchedAt) || newestFirst(a.addedAt, b.addedAt),
   },
   title: {
     label: 'Title',
@@ -57,6 +59,8 @@ export const SORTS = {
 }
 
 export type SortKey = keyof typeof SORTS
+export const DEFAULT_SORT: SortKey = 'watched'
+export type Layout = 'list' | 'grid'
 
 export function browse(
   items: LibraryItem[],

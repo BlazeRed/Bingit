@@ -71,6 +71,15 @@ describe('LibraryView', () => {
     expect(titles(wrapper)).toEqual(['Low Tide'])
   })
 
+  it('keeps seen, paused and dropped titles in the archive sheet', async () => {
+    const wrapper = await mountAt('/library/tv?archive=dropped')
+
+    expect(wrapper.get('[aria-label="Status"]').text()).not.toContain('Dropped')
+    expect(document.body.textContent).toContain('Archive')
+    expect(document.querySelector('[aria-label="Archive status"]')?.textContent).toContain('Seen')
+    wrapper.unmount()
+  })
+
   it('opens movies on the watchlist, without a Watching tab', async () => {
     const wrapper = await mountAt('/library/movies/watching')
 

@@ -3,6 +3,7 @@ import ErrorNote from './ErrorNote.vue'
 import { computed, ref, watch } from 'vue'
 
 import { getBrowse, getGenreTrending, getGenres, getTrending } from '@/api/discover'
+import AppSelect from '@/components/AppSelect.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import TitleRow from '@/components/TitleRow.vue'
 import { useAsync } from '@/composables/useAsync'
@@ -64,6 +65,25 @@ const heading = computed(() => {
   return `Trending on Simkl ${TRENDING[list.value].toLowerCase()}`
 })
 
+const toOptions = (labels: Record<string, string>) =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }))
+
+const listGroups = computed(() => {
+  const trending = { label: 'Trending', options: toOptions(TRENDING) }
+  if (type.value === 'movies') return [trending]
+  return [trending, { label: 'Browse', options: toOptions(BROWSE) }]
+})
+
+const ALL_GENRES = 'all'
+const genreGroups = computed(() => [
+  {
+    options: [
+      { value: ALL_GENRES, label: 'All genres' },
+      ...(genres.value ?? []).map((g) => ({ value: g.slug, label: g.name })),
+    ],
+  },
+])
+
 const MOST_WATCHED = {
   movies: 'https://simkl.com/movies/best-movies/most-watched/',
   tv: 'https://simkl.com/tv/best-shows/most-watched/',
@@ -76,18 +96,19 @@ const MOST_WATCHED = {
     <SegmentedControl v-model="type" :options="TYPES" label="Category" />
 
     <div class="filters">
-      <select v-model="list" class="field" aria-label="List" :disabled="Boolean(genre)">
-        <optgroup label="Trending">
-          <option v-for="(label, key) in TRENDING" :key="key" :value="key">{{ label }}</option>
-        </optgroup>
-        <optgroup v-if="type !== 'movies'" label="Browse">
-          <option v-for="(label, key) in BROWSE" :key="key" :value="key">{{ label }}</option>
-        </optgroup>
-      </select>
-      <select v-model="genre" class="field" aria-label="Genre">
-        <option value="">All genres</option>
-        <option v-for="g in genres" :key="g.slug" :value="g.slug">{{ g.name }}</option>
-      </select>
+      <AppSelect
+        :model-value="list"
+        :groups="listGroups"
+        aria-label="List"
+        :disabled="Boolean(genre)"
+        @update:model-value="list = $event as List"
+      />
+      <AppSelect
+        :model-value="genre || ALL_GENRES"
+        :groups="genreGroups"
+        aria-label="Genre"
+        @update:model-value="genre = $event === ALL_GENRES ? '' : $event"
+      />
     </div>
 
     <h2>{{ heading }}</h2>
@@ -120,7 +141,7 @@ const MOST_WATCHED = {
   gap: var(--space-2);
 }
 
-.filters select {
+.filters > * {
   flex: 1;
   min-width: 0;
 }
